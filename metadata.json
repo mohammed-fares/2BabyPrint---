@@ -1,0 +1,6 @@
+{
+  "name": "2BabyPrint - متجر طباعة ملابس أطفال بالطلب",
+  "description": "متجر متكامل لطباعة ملابس الأطفال والرضع بالطلب مع استوديو تصميم تفاعلي حي وخيارات تخصيص الأسماء والألوان والقصاصات الفنية ومخرجات طباعة عالية الدقة.",
+  "requestFramePermissions": [],
+  "majorCapabilities": ["MAJOR_CAPABILITY_SERVER_SIDE_GEMINI_API"]
+}
