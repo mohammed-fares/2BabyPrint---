@@ -29,12 +29,17 @@ export const Footer: React.FC<FooterProps> = ({
             <a
               href="#"
               className="text-2xl font-extrabold text-white tracking-tight inline-block"
-              style={{ fontFamily: "'Cairo', 'Plus Jakarta Sans', sans-serif" }}
             >
-              <span className="text-amber-400">{storeSettings?.storeName || '2BabyPrint'}</span>
+              <span className="text-amber-400">
+                {lang === 'en'
+                  ? (storeSettings?.storeNameEn || storeSettings?.storeName || '2BabyPrint')
+                  : (storeSettings?.storeName || '2BabyPrint')}
+              </span>
             </a>
             <p className="text-stone-400 leading-relaxed text-xs">
-              {storeSettings?.footerBio || t.footer.desc}
+              {lang === 'en'
+                ? (storeSettings?.footerBioEn || t.footer.desc)
+                : (storeSettings?.footerBio || t.footer.desc)}
             </p>
 
             {(storeSettings?.contactPhone || storeSettings?.contactWhatsapp) && (
@@ -173,9 +178,15 @@ export const Footer: React.FC<FooterProps> = ({
         {/* Bottom Copyright & Discreet Staff Access */}
         <div className="pt-8 flex flex-col sm:flex-row items-center justify-between text-stone-500 text-[11px] gap-3">
           <div>
-            {storeSettings?.footerCopyright || `© ${new Date().getFullYear()} ${t.footer.copyright}`}
-            {storeSettings?.footerAddress && (
-              <span className="block text-[10px] text-stone-500 mt-0.5">{storeSettings.footerAddress}</span>
+            {lang === 'en'
+              ? (storeSettings?.footerCopyrightEn || `© ${new Date().getFullYear()} ${t.footer.copyright}`)
+              : (storeSettings?.footerCopyright || `© ${new Date().getFullYear()} ${t.footer.copyright}`)}
+            {(storeSettings?.footerAddress || storeSettings?.footerAddressEn) && (
+              <span className="block text-[10px] text-stone-500 mt-0.5">
+                {lang === 'en'
+                  ? (storeSettings?.footerAddressEn || storeSettings?.footerAddress)
+                  : storeSettings?.footerAddress}
+              </span>
             )}
           </div>
           <div className="flex items-center gap-4 flex-wrap">

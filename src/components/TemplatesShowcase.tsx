@@ -23,16 +23,23 @@ export const TemplatesShowcase: React.FC<TemplatesShowcaseProps> = ({
         <div className="text-center max-w-2xl mx-auto mb-12">
           <div className="text-xs font-semibold text-amber-700 mb-1.5 flex items-center justify-center gap-1.5">
             <Sparkles className="w-4 h-4 text-amber-600" />
-            <span>{storeSettings?.templatesTagline || t.templates.tagline}</span>
+            <span>
+              {lang === 'en'
+                ? (storeSettings?.templatesTaglineEn || t.templates.tagline)
+                : (storeSettings?.templatesTagline || t.templates.tagline)}
+            </span>
           </div>
           <h2
             className="text-2xl sm:text-3xl font-extrabold text-stone-900 tracking-tight"
-            style={{ fontFamily: lang === 'ar' ? "'Cairo', sans-serif" : "'Plus Jakarta Sans', sans-serif" }}
           >
-            {storeSettings?.templatesTitle || t.templates.title}
+            {lang === 'en'
+              ? (storeSettings?.templatesTitleEn || t.templates.title)
+              : (storeSettings?.templatesTitle || t.templates.title)}
           </h2>
           <p className="text-sm text-stone-600 mt-2 leading-relaxed">
-            {storeSettings?.templatesSubtitle || t.templates.subtitle}
+            {lang === 'en'
+              ? (storeSettings?.templatesSubtitleEn || t.templates.subtitle)
+              : (storeSettings?.templatesSubtitle || t.templates.subtitle)}
           </p>
         </div>
 

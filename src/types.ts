@@ -244,6 +244,44 @@ export interface StoreSettings {
   // Theme Accent Color
   themeColor?: 'amber' | 'rose' | 'emerald' | 'sky' | 'indigo';
 
+  // Dynamic Typography Configuration per Language
+  fontArabic?: ArabicFontFamily;
+  fontEnglish?: EnglishFontFamily;
+
+  // Bilingual English CMS Fields
+  storeNameEn?: string;
+  storeTaglineEn?: string;
+  announcementTextEn?: string;
+  heroBadgeEn?: string;
+  heroTitleEn?: string;
+  heroSubtitleEn?: string;
+  heroCtaEn?: string;
+  heroSecondaryCtaEn?: string;
+  heroProofCottonEn?: string;
+  heroProofInksEn?: string;
+
+  feature1TitleEn?: string;
+  feature1DescEn?: string;
+  feature2TitleEn?: string;
+  feature2DescEn?: string;
+  feature3TitleEn?: string;
+  feature3DescEn?: string;
+  feature4TitleEn?: string;
+  feature4DescEn?: string;
+
+  catalogTaglineEn?: string;
+  catalogTitleEn?: string;
+  catalogHintEn?: string;
+
+  templatesTaglineEn?: string;
+  templatesTitleEn?: string;
+  templatesSubtitleEn?: string;
+
+  footerBioEn?: string;
+  footerAddressEn?: string;
+  footerWorkingHoursEn?: string;
+  footerCopyrightEn?: string;
+
   // Electronic Pre-Payments in Cairo & Egypt
   instapayIpa: string;
   instapayPhone: string;
@@ -263,3 +301,77 @@ export interface StoreSettings {
   youthSizes: SizeGuideRow[];
 }
 
+export type ArabicFontFamily =
+  | 'Cairo'
+  | 'Tajawal'
+  | 'Almarai'
+  | 'Readex Pro'
+  | 'Alexandria'
+  | 'Changa'
+  | 'Baloo Bhaijaan 2'
+  | 'IBM Plex Sans Arabic';
+
+export type EnglishFontFamily =
+  | 'Plus Jakarta Sans'
+  | 'Inter'
+  | 'Poppins'
+  | 'Outfit'
+  | 'Montserrat'
+  | 'Nunito'
+  | 'Playfair Display';
+
+// Social Media & AI Ads Campaign Types
+export type SocialPlatform = 'instagram' | 'facebook' | 'tiktok' | 'snapchat' | 'google' | 'pinterest';
+
+export type CampaignGoal =
+  | 'custom_studio' // الترويج لاستوديو التصميم الحي وتجربة العميل
+  | 'baby_shower' // هدايا السبوع والمواليد الجدد
+  | 'birthdays' // تصاميم أعياد الميلاد المخصصة
+  | 'pure_cotton' // إبراز جودة القطن المصري 100% والأحبار الآمنة
+  | 'fast_delivery' // توصيل سريع للقاهرة والجيزة
+  | 'promo_discount'; // عروض وتخفيضات وكوبونات
+
+export type CampaignStatus = 'active' | 'paused' | 'draft' | 'completed';
+
+export interface SocialCampaign {
+  id: string;
+  name: string;
+  platform: SocialPlatform;
+  goal: CampaignGoal;
+  status: CampaignStatus;
+  startDate: string;
+  budgetPerDay: number; // in EGP
+  totalSpent: number; // in EGP
+  targetAudience: {
+    label: string;
+    ageRange: string;
+    locations: string[];
+    interests: string[];
+    demographics: string;
+  };
+  adCreative: {
+    headline: string;
+    bodyText: string;
+    ctaText: string;
+    ctaUrl: string;
+    hashtags: string[];
+    mediaType: 'image' | 'carousel' | 'video_reel';
+    imageUrl: string;
+    videoScript?: {
+      hookSeconds: string;
+      visualAction: string;
+      voiceover: string;
+      soundTrackRecommendation: string;
+    };
+  };
+  metrics: {
+    impressions: number;
+    clicks: number;
+    ctr: number; // percentage e.g. 3.4
+    conversions: number; // orders
+    cpa: number; // EGP per order
+    roas: number; // e.g. 4.2
+  };
+  aiNotes?: string;
+  createdAt: string;
+}

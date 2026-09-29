@@ -53,6 +53,45 @@ export const DEFAULT_STORE_SETTINGS: StoreSettings = {
   // Theme Accent
   themeColor: 'amber',
 
+  // Typography Settings per Language
+  fontArabic: 'Cairo',
+  fontEnglish: 'Plus Jakarta Sans',
+
+  // Bilingual English CMS Defaults
+  storeNameEn: '2BabyPrint',
+  storeTaglineEn: 'Custom Egyptian Cotton Baby & Kids Apparel Brand',
+  announcementTextEn: '✨ Fast 48h Delivery across Greater Cairo & Giza | 100% Pure Egyptian Cotton',
+  
+  heroBadgeEn: '✨ 100% Pure Egyptian Cotton Ultra-Soft for Baby Skin',
+  heroTitleEn: 'Cherished Custom Outfits for Your Little Ones',
+  heroSubtitleEn: 'Design unique baby rompers, tees, and hoodies from newborn to 10 years, digitally printed with eco-safe inks on premium Egyptian cotton in Cairo.',
+  heroCtaEn: 'Start Customizing Now 🎨',
+  heroSecondaryCtaEn: 'Explore Ready Ideas 💡',
+  heroProofCottonEn: '100% Certified Egyptian Cotton for Newborns',
+  heroProofInksEn: 'Water-based Hypoallergenic Eco Inks',
+
+  feature1TitleEn: '100% Pure Egyptian Cotton',
+  feature1DescEn: 'Silky soft, ultra-breathable fabric gentle on infant skin all day',
+  feature2TitleEn: 'Safe Eco-Friendly Inks',
+  feature2DescEn: 'Oeko-Tex certified water-based inks resilient to repeated washes',
+  feature3TitleEn: 'Interactive Live Studio',
+  feature3DescEn: 'Type your baby name, preview quotes, and see 3D mockups before print',
+  feature4TitleEn: 'Fast Cairo & Giza Delivery',
+  feature4DescEn: 'Reliable doorstep shipping across Cairo & Giza within 48 to 72 hours',
+
+  catalogTaglineEn: 'Ready-to-Customize Apparel Collection',
+  catalogTitleEn: 'Choose a Garment and Start Customizing',
+  catalogHintEn: '💡 Select a garment below to personalize names, colors, and art in the live studio',
+
+  templatesTaglineEn: 'Exclusive Loved Collections for Moms',
+  templatesTitleEn: 'Ready-made Design Ideas in One Click',
+  templatesSubtitleEn: 'Handcrafted designs for Sebou baby showers, birthdays, and Egyptian celebrations, ready to personalize with your baby name',
+
+  footerBioEn: 'Leading Egyptian brand in custom baby and children clothing with certified pure Egyptian cotton and fast delivery across Cairo.',
+  footerAddressEn: 'New Cairo, 5th Settlement, Cairo, Egypt',
+  footerWorkingHoursEn: 'Customer Support Daily from 9:00 AM to 10:00 PM',
+  footerCopyrightEn: '© 2026 2BabyPrint Egypt. All rights reserved for custom baby apparel.',
+
   // Electronic Pre-Payments in Cairo & Egypt
   instapayIpa: '2babyprint@instapay',
   instapayPhone: '01099887766',

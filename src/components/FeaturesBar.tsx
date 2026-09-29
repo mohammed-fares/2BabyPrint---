@@ -1,35 +1,52 @@
 import React from 'react';
 import { Feather, Sparkles, Printer, Truck } from 'lucide-react';
-import { Translations } from '../i18n/translations';
-
+import { Translations, Language } from '../i18n/translations';
 import { StoreSettings } from '../types';
 
 interface FeaturesBarProps {
   t: Translations;
+  lang?: Language;
   storeSettings?: StoreSettings;
 }
 
-export const FeaturesBar: React.FC<FeaturesBarProps> = ({ t, storeSettings }) => {
+export const FeaturesBar: React.FC<FeaturesBarProps> = ({ t, lang = 'ar', storeSettings }) => {
+  const isEn = lang === 'en';
   const features = [
     {
       icon: Feather,
-      title: storeSettings?.feature1Title || t.features.f1Title,
-      description: storeSettings?.feature1Desc || t.features.f1Desc,
+      title: isEn
+        ? (storeSettings?.feature1TitleEn || t.features.f1Title)
+        : (storeSettings?.feature1Title || t.features.f1Title),
+      description: isEn
+        ? (storeSettings?.feature1DescEn || t.features.f1Desc)
+        : (storeSettings?.feature1Desc || t.features.f1Desc),
     },
     {
       icon: Printer,
-      title: storeSettings?.feature2Title || t.features.f2Title,
-      description: storeSettings?.feature2Desc || t.features.f2Desc,
+      title: isEn
+        ? (storeSettings?.feature2TitleEn || t.features.f2Title)
+        : (storeSettings?.feature2Title || t.features.f2Title),
+      description: isEn
+        ? (storeSettings?.feature2DescEn || t.features.f2Desc)
+        : (storeSettings?.feature2Desc || t.features.f2Desc),
     },
     {
       icon: Sparkles,
-      title: storeSettings?.feature3Title || t.features.f3Title,
-      description: storeSettings?.feature3Desc || t.features.f3Desc,
+      title: isEn
+        ? (storeSettings?.feature3TitleEn || t.features.f3Title)
+        : (storeSettings?.feature3Title || t.features.f3Title),
+      description: isEn
+        ? (storeSettings?.feature3DescEn || t.features.f3Desc)
+        : (storeSettings?.feature3Desc || t.features.f3Desc),
     },
     {
       icon: Truck,
-      title: storeSettings?.feature4Title || t.features.f4Title,
-      description: storeSettings?.feature4Desc || t.features.f4Desc,
+      title: isEn
+        ? (storeSettings?.feature4TitleEn || t.features.f4Title)
+        : (storeSettings?.feature4Title || t.features.f4Title),
+      description: isEn
+        ? (storeSettings?.feature4DescEn || t.features.f4Desc)
+        : (storeSettings?.feature4Desc || t.features.f4Desc),
     },
   ];
 

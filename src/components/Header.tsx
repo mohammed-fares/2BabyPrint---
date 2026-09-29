@@ -77,7 +77,11 @@ export const Header: React.FC<HeaderProps> = ({
       {/* Top Announcement Bar */}
       {storeSettings?.showAnnouncement !== false && (
         <div className="bg-[#FAF6EE] border-b border-amber-100/60 py-2 px-4 text-center text-xs text-amber-900 font-medium">
-          <span>{storeSettings?.announcementText || t.announcement}</span>
+          <span>
+            {lang === 'en'
+              ? (storeSettings?.announcementTextEn || t.announcement)
+              : (storeSettings?.announcementText || t.announcement)}
+          </span>
         </div>
       )}
 
@@ -98,9 +102,12 @@ export const Header: React.FC<HeaderProps> = ({
           <a
             href="#"
             className="text-2xl font-extrabold tracking-tight text-stone-900 hover:text-amber-800 transition-colors flex items-center gap-1.5"
-            style={{ fontFamily: "'Cairo', 'Plus Jakarta Sans', sans-serif" }}
           >
-            <span className="text-amber-600">{storeSettings?.storeName || '2BabyPrint'}</span>
+            <span className="text-amber-600">
+              {lang === 'en'
+                ? (storeSettings?.storeNameEn || storeSettings?.storeName || '2BabyPrint')
+                : (storeSettings?.storeName || '2BabyPrint')}
+            </span>
           </a>
         </div>
 

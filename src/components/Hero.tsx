@@ -18,7 +18,28 @@ export const Hero: React.FC<HeroProps> = ({
   onExploreTemplates,
   storeSettings,
 }) => {
+  const isEn = lang === 'en';
   const ArrowIcon = lang === 'ar' ? ArrowLeft : ArrowRight;
+
+  const heroBadge = isEn ? (storeSettings?.heroBadgeEn || t.hero.kicker) : (storeSettings?.heroBadge || t.hero.kicker);
+  const heroTitle = isEn
+    ? (storeSettings?.heroTitleEn || (
+        <>
+          {t.hero.title1}
+          <span className="text-amber-700 block mt-1">{t.hero.title2}</span>
+        </>
+      ))
+    : (storeSettings?.heroTitle || (
+        <>
+          {t.hero.title1}
+          <span className="text-amber-700 block mt-1">{t.hero.title2}</span>
+        </>
+      ));
+  const heroSubtitle = isEn ? (storeSettings?.heroSubtitleEn || t.hero.subtitle) : (storeSettings?.heroSubtitle || t.hero.subtitle);
+  const heroCta = isEn ? (storeSettings?.heroCtaEn || t.hero.ctaPrimary) : (storeSettings?.heroCta || t.hero.ctaPrimary);
+  const heroSecondaryCta = isEn ? (storeSettings?.heroSecondaryCtaEn || t.hero.ctaSecondary) : (storeSettings?.heroSecondaryCta || t.hero.ctaSecondary);
+  const heroProofCotton = isEn ? (storeSettings?.heroProofCottonEn || t.hero.proofCotton) : (storeSettings?.heroProofCotton || t.hero.proofCotton);
+  const heroProofInks = isEn ? (storeSettings?.heroProofInksEn || t.hero.proofInks) : (storeSettings?.heroProofInks || t.hero.proofInks);
 
   return (
     <section className="relative overflow-hidden bg-gradient-to-b from-[#FDFBF7] to-[#FAF9F6] border-b border-stone-200/80">
@@ -29,28 +50,22 @@ export const Hero: React.FC<HeroProps> = ({
             {/* Quiet 1-line kicker (No pill badge) */}
             <div className="flex items-center gap-2 text-xs font-semibold text-amber-800">
               <Sparkles className="w-4 h-4 text-amber-600 shrink-0" />
-              <span>{storeSettings?.heroBadge || t.hero.kicker}</span>
+              <span>{heroBadge}</span>
             </div>
 
             {/* Display Headline with text-wrap: balance */}
             <h1
               className="text-3xl sm:text-4xl md:text-5xl font-extrabold text-stone-900 leading-[1.25] tracking-tight"
               style={{
-                fontFamily: lang === 'ar' ? "'Cairo', sans-serif" : "'Plus Jakarta Sans', sans-serif",
                 textWrap: 'balance',
               }}
             >
-              {storeSettings?.heroTitle || (
-                <>
-                  {t.hero.title1}
-                  <span className="text-amber-700 block mt-1">{t.hero.title2}</span>
-                </>
-              )}
+              {heroTitle}
             </h1>
 
             {/* Subtitle */}
             <p className="text-base sm:text-lg text-stone-600 leading-relaxed max-w-xl">
-              {storeSettings?.heroSubtitle || t.hero.subtitle}
+              {heroSubtitle}
             </p>
 
             {/* Action Buttons */}
@@ -58,19 +73,19 @@ export const Hero: React.FC<HeroProps> = ({
               <button
                 type="button"
                 onClick={onStartCustomizing}
-                className="px-6 py-3.5 bg-amber-500 hover:bg-amber-600 active:scale-98 text-stone-950 font-bold rounded-xl text-sm transition-all shadow-sm flex items-center gap-2.5"
+                className="px-6 py-3.5 bg-amber-500 hover:bg-amber-600 active:scale-98 text-stone-950 font-bold rounded-xl text-sm transition-all shadow-sm flex items-center gap-2.5 cursor-pointer"
               >
                 <Sparkles className="w-4 h-4" />
-                <span>{storeSettings?.heroCta || t.hero.ctaPrimary}</span>
+                <span>{heroCta}</span>
                 <ArrowIcon className="w-4 h-4" />
               </button>
 
               <button
                 type="button"
                 onClick={onExploreTemplates}
-                className="px-5 py-3.5 bg-white hover:bg-stone-50 border border-stone-300 text-stone-700 font-semibold rounded-xl text-sm transition-colors"
+                className="px-5 py-3.5 bg-white hover:bg-stone-50 border border-stone-300 text-stone-700 font-semibold rounded-xl text-sm transition-colors cursor-pointer"
               >
-                {storeSettings?.heroSecondaryCta || t.hero.ctaSecondary}
+                {heroSecondaryCta}
               </button>
             </div>
 
@@ -78,11 +93,11 @@ export const Hero: React.FC<HeroProps> = ({
             <div className="pt-6 border-t border-stone-200/80 flex flex-wrap items-center gap-6 text-xs text-stone-600">
               <div className="flex items-center gap-2">
                 <ShieldCheck className="w-4 h-4 text-emerald-600" />
-                <span>{storeSettings?.heroProofCotton || t.hero.proofCotton}</span>
+                <span>{heroProofCotton}</span>
               </div>
               <div className="flex items-center gap-2">
                 <HeartHandshake className="w-4 h-4 text-amber-600" />
-                <span>{storeSettings?.heroProofInks || t.hero.proofInks}</span>
+                <span>{heroProofInks}</span>
               </div>
             </div>
           </div>

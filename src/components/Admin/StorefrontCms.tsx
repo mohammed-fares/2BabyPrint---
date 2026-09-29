@@ -1,5 +1,5 @@
 import React, { useState } from 'react';
-import { StoreSettings } from '../../types';
+import { StoreSettings, ArabicFontFamily, EnglishFontFamily } from '../../types';
 import {
   Sliders,
   Save,
@@ -17,9 +17,12 @@ import {
   Truck,
   ArrowUp,
   ArrowDown,
+  Globe,
+  Type,
 } from 'lucide-react';
 
 export type CmsSubTab =
+  | 'typography'
   | 'hero'
   | 'header'
   | 'features'
@@ -29,6 +32,27 @@ export type CmsSubTab =
   | 'sections'
   | 'sizeguide'
   | 'payments';
+
+export const ARABIC_FONTS: { id: ArabicFontFamily; name: string; style: string }[] = [
+  { id: 'Cairo', name: 'خط كايرو (Cairo)', style: 'خط كلاسيكي عصري عريض متناسق' },
+  { id: 'Tajawal', name: 'خط تجوال (Tajawal)', style: 'هندسي مريح للقراءة وناعم' },
+  { id: 'Almarai', name: 'خط المراعي (Almarai)', style: 'تقني أنيق ونظيف ومميز' },
+  { id: 'Readex Pro', name: 'خط ريديكس برو (Readex Pro)', style: 'عصري متطور مخصص لواجهات الويب' },
+  { id: 'Alexandria', name: 'خط الإسكندرية (Alexandria)', style: 'طابع إنساني راقٍ متصل' },
+  { id: 'Changa', name: 'خط تشانجا (Changa)', style: 'عريض ومرح وجذاب لملابس الأطفال' },
+  { id: 'Baloo Bhaijaan 2', name: 'خط بالو (Baloo Bhaijaan 2)', style: 'دائري لطيف وفكاهي للأطفال والرضع' },
+  { id: 'IBM Plex Sans Arabic', name: 'خط آي بي إم بلكس (IBM Plex Arabic)', style: 'احترافي عالمي ذو حضور قوي' },
+];
+
+export const ENGLISH_FONTS: { id: EnglishFontFamily; name: string; style: string }[] = [
+  { id: 'Plus Jakarta Sans', name: 'Plus Jakarta Sans', style: 'Modern geometric sans' },
+  { id: 'Inter', name: 'Inter', style: 'World standard clean UI font' },
+  { id: 'Poppins', name: 'Poppins', style: 'Friendly circular geometric curves' },
+  { id: 'Outfit', name: 'Outfit', style: 'Sleek luxury fashion branding' },
+  { id: 'Montserrat', name: 'Montserrat', style: 'Bold classic aesthetic style' },
+  { id: 'Nunito', name: 'Nunito', style: 'Ultra-soft rounded playful baby apparel' },
+  { id: 'Playfair Display', name: 'Playfair Display', style: 'Elegant high-end editorial serif' },
+];
 
 interface CuratedMockup {
   id: string;
@@ -51,7 +75,8 @@ export const StorefrontCms: React.FC<StorefrontCmsProps> = ({
   savedSettingsNotice,
   curatedMockups,
 }) => {
-  const [cmsSubTab, setCmsSubTab] = useState<CmsSubTab>('hero');
+  const [cmsSubTab, setCmsSubTab] = useState<CmsSubTab>('typography');
+  const [cmsLanguage, setCmsLanguage] = useState<'ar' | 'en'>('ar');
 
   // Reorder sections in storefront
   const handleMoveSection = (index: number, direction: 'up' | 'down') => {
@@ -111,6 +136,7 @@ export const StorefrontCms: React.FC<StorefrontCmsProps> = ({
       {/* CMS Sub-navigation Tabs */}
       <div className="flex items-center gap-1.5 p-1.5 bg-white rounded-2xl border border-stone-200 overflow-x-auto shadow-2xs">
         {[
+          { id: 'typography', label: 'الخطوط والمظهر (Fonts)', icon: Type },
           { id: 'hero', label: 'البانر الترحيبي (Hero)', icon: Sparkles },
           { id: 'header', label: 'الهيدر والإعلانات', icon: Megaphone },
           { id: 'features', label: 'شريط المميزات', icon: Feather },
@@ -141,71 +167,262 @@ export const StorefrontCms: React.FC<StorefrontCmsProps> = ({
         })}
       </div>
 
+      {/* Bilingual Content Editor Toggle (for text sections) */}
+      {cmsSubTab !== 'sections' && cmsSubTab !== 'typography' && cmsSubTab !== 'sizeguide' && cmsSubTab !== 'payments' && (
+        <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-3 bg-stone-50 border border-stone-200/80 p-3 rounded-2xl">
+          <div className="flex items-center gap-2 text-xs font-bold text-stone-800">
+            <Globe className="w-4 h-4 text-amber-600" />
+            <span>لغة المحتوى والنصوص المراد تحريرها في المتجر:</span>
+          </div>
+          <div className="flex items-center gap-1.5 bg-white p-1 rounded-xl border border-stone-200 shadow-2xs">
+            <button
+              type="button"
+              onClick={() => setCmsLanguage('ar')}
+              className={`px-3.5 py-1.5 text-xs font-bold rounded-lg transition-all flex items-center gap-1.5 cursor-pointer ${
+                cmsLanguage === 'ar' ? 'bg-amber-500 text-stone-950 shadow-xs' : 'text-stone-600 hover:text-stone-900'
+              }`}
+            >
+              <span>🇸🇦 العربية (المحتوى الأساسي)</span>
+            </button>
+            <button
+              type="button"
+              onClick={() => setCmsLanguage('en')}
+              className={`px-3.5 py-1.5 text-xs font-bold rounded-lg transition-all flex items-center gap-1.5 cursor-pointer ${
+                cmsLanguage === 'en' ? 'bg-amber-500 text-stone-950 shadow-xs' : 'text-stone-600 hover:text-stone-900'
+              }`}
+            >
+              <span>🇬🇧 English (English Storefront)</span>
+            </button>
+          </div>
+        </div>
+      )}
+
+      {/* ============================================================== */}
+      {/* SUBTAB 0: DYNAMIC TYPOGRAPHY & FONT MANAGER CMS */}
+      {/* ============================================================== */}
+      {cmsSubTab === 'typography' && (
+        <div className="bg-white p-6 rounded-2xl border border-stone-200 space-y-6">
+          <div className="border-b border-stone-100 pb-3">
+            <h4 className="font-bold text-sm text-stone-900 flex items-center gap-2">
+              <Type className="w-4 h-4 text-amber-600" />
+              <span>تحديد نوع الخط المستخدم للواجهة (Typography & Font Manager)</span>
+            </h4>
+            <p className="text-xs text-stone-500 mt-0.5">
+              اختاري نوع الخط المناسب للغة العربية واللغة الإنجليزية لتطبيقه فوراً على كافة نصوص وعناوين وأزرار المتجر
+            </p>
+          </div>
+
+          {/* Arabic Font Selector */}
+          <div className="space-y-3">
+            <label className="text-xs font-bold text-stone-900 flex items-center justify-between">
+              <span>1. نوع الخط المستخدم للغة العربية (Arabic Font):</span>
+              <span className="text-amber-800 text-[11px] font-mono bg-amber-50 px-2.5 py-1 rounded-lg border border-amber-200 font-bold">
+                الخط المحدد: {settingsForm.fontArabic || 'Cairo'}
+              </span>
+            </label>
+
+            <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-3">
+              {ARABIC_FONTS.map((font) => (
+                <button
+                  key={font.id}
+                  type="button"
+                  onClick={() => setSettingsForm({ ...settingsForm, fontArabic: font.id })}
+                  className={`p-3.5 rounded-xl border text-right transition-all cursor-pointer ${
+                    (settingsForm.fontArabic || 'Cairo') === font.id
+                      ? 'border-amber-500 bg-amber-50/80 ring-2 ring-amber-400/50 shadow-xs'
+                      : 'border-stone-200 bg-white hover:bg-stone-50'
+                  }`}
+                >
+                  <div className="font-bold text-sm text-stone-900" style={{ fontFamily: `'${font.id}', sans-serif` }}>
+                    {font.name}
+                  </div>
+                  <div className="text-[11px] text-stone-600 mt-1" style={{ fontFamily: `'${font.id}', sans-serif` }}>
+                    معاينة: قطن مصري 100% لبشرة الرضع
+                  </div>
+                  <div className="text-[10px] text-stone-400 mt-1.5 pt-1 border-t border-stone-100">
+                    {font.style}
+                  </div>
+                </button>
+              ))}
+            </div>
+          </div>
+
+          {/* English Font Selector */}
+          <div className="space-y-3 pt-4 border-t border-stone-100">
+            <label className="text-xs font-bold text-stone-900 flex items-center justify-between">
+              <span>2. نوع الخط المستخدم للغة الإنجليزية (English Font):</span>
+              <span className="text-amber-800 text-[11px] font-mono bg-amber-50 px-2.5 py-1 rounded-lg border border-amber-200 font-bold">
+                Selected: {settingsForm.fontEnglish || 'Plus Jakarta Sans'}
+              </span>
+            </label>
+
+            <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-3" dir="ltr">
+              {ENGLISH_FONTS.map((font) => (
+                <button
+                  key={font.id}
+                  type="button"
+                  onClick={() => setSettingsForm({ ...settingsForm, fontEnglish: font.id })}
+                  className={`p-3.5 rounded-xl border text-left transition-all cursor-pointer ${
+                    (settingsForm.fontEnglish || 'Plus Jakarta Sans') === font.id
+                      ? 'border-amber-500 bg-amber-50/80 ring-2 ring-amber-400/50 shadow-xs'
+                      : 'border-stone-200 bg-white hover:bg-stone-50'
+                  }`}
+                >
+                  <div className="font-bold text-sm text-stone-900" style={{ fontFamily: `'${font.id}', sans-serif` }}>
+                    {font.name}
+                  </div>
+                  <div className="text-[11px] text-stone-600 mt-1" style={{ fontFamily: `'${font.id}', sans-serif` }}>
+                    Sample: 100% Pure Egyptian Cotton
+                  </div>
+                  <div className="text-[10px] text-stone-400 mt-1.5 pt-1 border-t border-stone-100">
+                    {font.style}
+                  </div>
+                </button>
+              ))}
+            </div>
+          </div>
+
+          {/* Live Typography Preview Box */}
+          <div className="p-5 rounded-2xl bg-stone-900 text-white space-y-4 shadow-sm">
+            <div className="text-xs font-bold text-amber-400 flex items-center justify-between">
+              <span className="flex items-center gap-1.5">
+                <Sparkles className="w-4 h-4" />
+                <span>معاينة حية ومباشرة للخطوط المطبقة على واجهة المتجر:</span>
+              </span>
+              <span className="text-[11px] text-stone-400 font-mono">
+                عربي: {settingsForm.fontArabic || 'Cairo'} | English: {settingsForm.fontEnglish || 'Plus Jakarta Sans'}
+              </span>
+            </div>
+
+            <div className="p-4 rounded-xl bg-stone-800/80 space-y-2 border border-stone-700" style={{ fontFamily: `'${settingsForm.fontArabic || 'Cairo'}', sans-serif` }}>
+              <h3 className="text-xl font-extrabold text-amber-400">
+                {settingsForm.heroTitle || 'ملابس أطفال تُخلّد أجمل ذكريات البدايات'}
+              </h3>
+              <p className="text-xs text-stone-300 leading-relaxed">
+                {settingsForm.heroSubtitle || 'صممي سالوبيتات وتيشرتات وهوديز فريدة لطفلك من سن المواليد وحتى 10 سنوات، مطبوعة رقمياً على أجود خامات القطن المصري في القاهرة.'}
+              </p>
+            </div>
+
+            <div className="p-4 rounded-xl bg-stone-800/80 space-y-2 text-left border border-stone-700" dir="ltr" style={{ fontFamily: `'${settingsForm.fontEnglish || 'Plus Jakarta Sans'}', sans-serif` }}>
+              <h3 className="text-xl font-extrabold text-amber-400">
+                {settingsForm.heroTitleEn || 'Cherished Custom Outfits for Your Little Ones'}
+              </h3>
+              <p className="text-xs text-stone-300 leading-relaxed">
+                {settingsForm.heroSubtitleEn || 'Design unique baby rompers, tees, and hoodies from newborn to 10 years, digitally printed with eco-safe inks on premium Egyptian cotton in Cairo.'}
+              </p>
+            </div>
+          </div>
+        </div>
+      )}
+
       {/* ============================================================== */}
       {/* SUBTAB 1: HERO SECTION CMS */}
       {/* ============================================================== */}
       {cmsSubTab === 'hero' && (
         <div className="bg-white p-6 rounded-2xl border border-stone-200 space-y-6">
-          <div className="border-b border-stone-100 pb-3">
-            <h4 className="font-bold text-sm text-stone-900 flex items-center gap-2">
-              <Sparkles className="w-4 h-4 text-amber-600" />
-              <span>تخصيص البانر الترحيبي الرئيسي (Hero Banner Section)</span>
-            </h4>
-            <p className="text-xs text-stone-500 mt-0.5">
-              الواجهة الأولى التي يراها زوار وأمهات الأطفال في القاهرة عند فتح الموقع
-            </p>
+          <div className="border-b border-stone-100 pb-3 flex items-center justify-between">
+            <div>
+              <h4 className="font-bold text-sm text-stone-900 flex items-center gap-2">
+                <Sparkles className="w-4 h-4 text-amber-600" />
+                <span>تخصيص البانر الترحيبي الرئيسي (Hero Banner Section)</span>
+              </h4>
+              <p className="text-xs text-stone-500 mt-0.5">
+                الواجهة الأولى التي يراها زوار وأمهات الأطفال في القاهرة عند فتح الموقع ({cmsLanguage === 'ar' ? 'العربية' : 'English'})
+              </p>
+            </div>
+            <span className="text-[11px] font-bold px-2.5 py-1 bg-amber-50 text-amber-800 rounded-lg border border-amber-200">
+              {cmsLanguage === 'ar' ? 'تحرير النص العربي 🇸🇦' : 'Editing English 🇬🇧'}
+            </span>
           </div>
 
           <div className="grid grid-cols-1 md:grid-cols-2 gap-5 text-xs">
             <div className="space-y-4">
               <div>
-                <label className="text-stone-700 font-bold block mb-1">الشارة الترويجية العلوية (Badge):</label>
+                <label className="text-stone-700 font-bold block mb-1">
+                  {cmsLanguage === 'ar' ? 'الشارة الترويجية العلوية (Badge):' : 'Hero Kicker Badge (English):'}
+                </label>
                 <input
                   type="text"
-                  value={settingsForm.heroBadge || ''}
-                  placeholder="✨ قطن مصري 100% فائق النعومة مخصص للأطفال"
-                  onChange={(e) => setSettingsForm({ ...settingsForm, heroBadge: e.target.value })}
+                  value={cmsLanguage === 'ar' ? (settingsForm.heroBadge || '') : (settingsForm.heroBadgeEn || '')}
+                  placeholder={cmsLanguage === 'ar' ? '✨ قطن مصري 100% فائق النعومة مخصص للأطفال' : '✨ 100% Pure Egyptian Cotton Ultra-Soft for Baby Skin'}
+                  onChange={(e) =>
+                    cmsLanguage === 'ar'
+                      ? setSettingsForm({ ...settingsForm, heroBadge: e.target.value })
+                      : setSettingsForm({ ...settingsForm, heroBadgeEn: e.target.value })
+                  }
+                  dir={cmsLanguage === 'ar' ? 'rtl' : 'ltr'}
                   className="w-full px-3 py-2 bg-stone-50 border border-stone-300 rounded-xl text-xs font-medium"
                 />
               </div>
 
               <div>
-                <label className="text-stone-700 font-bold block mb-1">العنوان الرئيسي الكبير (Headline):</label>
+                <label className="text-stone-700 font-bold block mb-1">
+                  {cmsLanguage === 'ar' ? 'العنوان الرئيسي الكبير (Headline):' : 'Main Display Headline (English):'}
+                </label>
                 <input
                   type="text"
-                  value={settingsForm.heroTitle}
-                  onChange={(e) => setSettingsForm({ ...settingsForm, heroTitle: e.target.value })}
+                  value={cmsLanguage === 'ar' ? settingsForm.heroTitle : (settingsForm.heroTitleEn || '')}
+                  placeholder={cmsLanguage === 'ar' ? 'ملابس أطفال تُخلّد أجمل ذكريات البدايات' : 'Cherished Custom Outfits for Your Little Ones'}
+                  onChange={(e) =>
+                    cmsLanguage === 'ar'
+                      ? setSettingsForm({ ...settingsForm, heroTitle: e.target.value })
+                      : setSettingsForm({ ...settingsForm, heroTitleEn: e.target.value })
+                  }
+                  dir={cmsLanguage === 'ar' ? 'rtl' : 'ltr'}
                   className="w-full px-3 py-2 bg-stone-50 border border-stone-300 rounded-xl text-xs font-bold"
                 />
               </div>
 
               <div>
-                <label className="text-stone-700 font-bold block mb-1">النص الوصفي التوضيحي (Subtitle):</label>
+                <label className="text-stone-700 font-bold block mb-1">
+                  {cmsLanguage === 'ar' ? 'النص الوصفي التوضيحي (Subtitle):' : 'Descriptive Subtitle (English):'}
+                </label>
                 <textarea
                   rows={3}
-                  value={settingsForm.heroSubtitle}
-                  onChange={(e) => setSettingsForm({ ...settingsForm, heroSubtitle: e.target.value })}
+                  value={cmsLanguage === 'ar' ? settingsForm.heroSubtitle : (settingsForm.heroSubtitleEn || '')}
+                  placeholder={cmsLanguage === 'ar' ? 'صممي سالوبيتات وتيشرتات وهوديز فريدة لطفلك...' : 'Design unique baby rompers, tees, and hoodies from newborn to 10 years...'}
+                  onChange={(e) =>
+                    cmsLanguage === 'ar'
+                      ? setSettingsForm({ ...settingsForm, heroSubtitle: e.target.value })
+                      : setSettingsForm({ ...settingsForm, heroSubtitleEn: e.target.value })
+                  }
+                  dir={cmsLanguage === 'ar' ? 'rtl' : 'ltr'}
                   className="w-full px-3 py-2 bg-stone-50 border border-stone-300 rounded-xl text-xs leading-relaxed resize-none"
                 />
               </div>
 
               <div className="grid grid-cols-2 gap-3">
                 <div>
-                  <label className="text-stone-700 font-bold block mb-1">نص زر الإجراء الأول (CTA):</label>
+                  <label className="text-stone-700 font-bold block mb-1">
+                    {cmsLanguage === 'ar' ? 'زر الإجراء الأول (CTA):' : 'Primary CTA Button (English):'}
+                  </label>
                   <input
                     type="text"
-                    value={settingsForm.heroCta}
-                    onChange={(e) => setSettingsForm({ ...settingsForm, heroCta: e.target.value })}
+                    value={cmsLanguage === 'ar' ? settingsForm.heroCta : (settingsForm.heroCtaEn || '')}
+                    placeholder={cmsLanguage === 'ar' ? 'ابدئي التصميم واختاري الموديل 🎨' : 'Start Customizing Now 🎨'}
+                    onChange={(e) =>
+                      cmsLanguage === 'ar'
+                        ? setSettingsForm({ ...settingsForm, heroCta: e.target.value })
+                        : setSettingsForm({ ...settingsForm, heroCtaEn: e.target.value })
+                    }
+                    dir={cmsLanguage === 'ar' ? 'rtl' : 'ltr'}
                     className="w-full px-3 py-2 bg-stone-50 border border-stone-300 rounded-xl text-xs"
                   />
                 </div>
                 <div>
-                  <label className="text-stone-700 font-bold block mb-1">نص زر الإجراء الثانوي:</label>
+                  <label className="text-stone-700 font-bold block mb-1">
+                    {cmsLanguage === 'ar' ? 'زر الإجراء الثانوي:' : 'Secondary CTA Button (English):'}
+                  </label>
                   <input
                     type="text"
-                    value={settingsForm.heroSecondaryCta || ''}
-                    placeholder="استعراض القوالب والأفكار 💡"
-                    onChange={(e) => setSettingsForm({ ...settingsForm, heroSecondaryCta: e.target.value })}
+                    value={cmsLanguage === 'ar' ? (settingsForm.heroSecondaryCta || '') : (settingsForm.heroSecondaryCtaEn || '')}
+                    placeholder={cmsLanguage === 'ar' ? 'استعراض القوالب والأفكار 💡' : 'Explore Ready Ideas 💡'}
+                    onChange={(e) =>
+                      cmsLanguage === 'ar'
+                        ? setSettingsForm({ ...settingsForm, heroSecondaryCta: e.target.value })
+                        : setSettingsForm({ ...settingsForm, heroSecondaryCtaEn: e.target.value })
+                    }
+                    dir={cmsLanguage === 'ar' ? 'rtl' : 'ltr'}
                     className="w-full px-3 py-2 bg-stone-50 border border-stone-300 rounded-xl text-xs"
                   />
                 </div>
@@ -221,6 +438,7 @@ export const StorefrontCms: React.FC<StorefrontCmsProps> = ({
                   placeholder="/src/assets/images/hero_baby_apparel_1790519873737.jpg"
                   onChange={(e) => setSettingsForm({ ...settingsForm, heroImageUrl: e.target.value })}
                   className="w-full px-3 py-2 bg-stone-50 border border-stone-300 rounded-xl font-mono text-[11px]"
+                  dir="ltr"
                 />
                 <div className="mt-2 flex items-center gap-2">
                   <span className="text-[10px] text-stone-500 font-semibold">نماذج سريعة:</span>
@@ -239,22 +457,36 @@ export const StorefrontCms: React.FC<StorefrontCmsProps> = ({
 
               <div className="grid grid-cols-2 gap-3 pt-2">
                 <div>
-                  <label className="text-stone-700 font-bold block mb-1">نقطة ثقة الخامات (القطن):</label>
+                  <label className="text-stone-700 font-bold block mb-1">
+                    {cmsLanguage === 'ar' ? 'نقطة ثقة الخامات (القطن):' : 'Proof (Cotton - English):'}
+                  </label>
                   <input
                     type="text"
-                    value={settingsForm.heroProofCotton || ''}
-                    placeholder="قطن مصري 100% معتمد للمواليد"
-                    onChange={(e) => setSettingsForm({ ...settingsForm, heroProofCotton: e.target.value })}
+                    value={cmsLanguage === 'ar' ? (settingsForm.heroProofCotton || '') : (settingsForm.heroProofCottonEn || '')}
+                    placeholder={cmsLanguage === 'ar' ? 'قطن مصري 100% معتمد للمواليد' : '100% Certified Egyptian Cotton'}
+                    onChange={(e) =>
+                      cmsLanguage === 'ar'
+                        ? setSettingsForm({ ...settingsForm, heroProofCotton: e.target.value })
+                        : setSettingsForm({ ...settingsForm, heroProofCottonEn: e.target.value })
+                    }
+                    dir={cmsLanguage === 'ar' ? 'rtl' : 'ltr'}
                     className="w-full px-3 py-2 bg-stone-50 border border-stone-300 rounded-xl text-xs"
                   />
                 </div>
                 <div>
-                  <label className="text-stone-700 font-bold block mb-1">نقطة ثقة الأحبار:</label>
+                  <label className="text-stone-700 font-bold block mb-1">
+                    {cmsLanguage === 'ar' ? 'نقطة ثقة الأحبار:' : 'Proof (Inks - English):'}
+                  </label>
                   <input
                     type="text"
-                    value={settingsForm.heroProofInks || ''}
-                    placeholder="أحبار مائية بيئية آمنة غير ملموسة"
-                    onChange={(e) => setSettingsForm({ ...settingsForm, heroProofInks: e.target.value })}
+                    value={cmsLanguage === 'ar' ? (settingsForm.heroProofInks || '') : (settingsForm.heroProofInksEn || '')}
+                    placeholder={cmsLanguage === 'ar' ? 'أحبار مائية بيئية آمنة غير ملموسة' : 'Water-based Hypoallergenic Eco Inks'}
+                    onChange={(e) =>
+                      cmsLanguage === 'ar'
+                        ? setSettingsForm({ ...settingsForm, heroProofInks: e.target.value })
+                        : setSettingsForm({ ...settingsForm, heroProofInksEn: e.target.value })
+                    }
+                    dir={cmsLanguage === 'ar' ? 'rtl' : 'ltr'}
                     className="w-full px-3 py-2 bg-stone-50 border border-stone-300 rounded-xl text-xs"
                   />
                 </div>
@@ -270,8 +502,12 @@ export const StorefrontCms: React.FC<StorefrontCmsProps> = ({
                     className="w-16 h-12 rounded-lg object-cover border border-stone-200 shrink-0"
                   />
                   <div className="min-w-0">
-                    <p className="text-xs font-bold text-stone-900 truncate">{settingsForm.heroTitle}</p>
-                    <p className="text-[11px] text-stone-500 line-clamp-1">{settingsForm.heroSubtitle}</p>
+                    <p className="text-xs font-bold text-stone-900 truncate">
+                      {cmsLanguage === 'ar' ? settingsForm.heroTitle : (settingsForm.heroTitleEn || settingsForm.heroTitle)}
+                    </p>
+                    <p className="text-[11px] text-stone-500 line-clamp-1">
+                      {cmsLanguage === 'ar' ? settingsForm.heroSubtitle : (settingsForm.heroSubtitleEn || settingsForm.heroSubtitle)}
+                    </p>
                   </div>
                 </div>
               </div>
@@ -285,35 +521,55 @@ export const StorefrontCms: React.FC<StorefrontCmsProps> = ({
       {/* ============================================================== */}
       {cmsSubTab === 'header' && (
         <div className="bg-white p-6 rounded-2xl border border-stone-200 space-y-6">
-          <div className="border-b border-stone-100 pb-3">
-            <h4 className="font-bold text-sm text-stone-900 flex items-center gap-2">
-              <Megaphone className="w-4 h-4 text-amber-600" />
-              <span>تخصيص الهيدر وشريط الإعلانات الترويجي العلوي</span>
-            </h4>
-            <p className="text-xs text-stone-500 mt-0.5">
-              التحكم في اسم العلامة التجارية، الشريط الإعلاني، وإمكانية إظهاره أو إخفائه
-            </p>
+          <div className="border-b border-stone-100 pb-3 flex items-center justify-between">
+            <div>
+              <h4 className="font-bold text-sm text-stone-900 flex items-center gap-2">
+                <Megaphone className="w-4 h-4 text-amber-600" />
+                <span>تخصيص الهيدر وشريط الإعلانات الترويجي العلوي</span>
+              </h4>
+              <p className="text-xs text-stone-500 mt-0.5">
+                التحكم في اسم العلامة التجارية، الشريط الإعلاني، وإمكانية إظهاره أو إخفائه ({cmsLanguage === 'ar' ? 'العربية' : 'English'})
+              </p>
+            </div>
+            <span className="text-[11px] font-bold px-2.5 py-1 bg-amber-50 text-amber-800 rounded-lg border border-amber-200">
+              {cmsLanguage === 'ar' ? 'تحرير النص العربي 🇸🇦' : 'Editing English 🇬🇧'}
+            </span>
           </div>
 
           <div className="grid grid-cols-1 md:grid-cols-2 gap-5 text-xs">
             <div className="space-y-4">
               <div>
-                <label className="text-stone-700 font-bold block mb-1">اسم المتجر / العلامة التجارية (Store Name):</label>
+                <label className="text-stone-700 font-bold block mb-1">
+                  {cmsLanguage === 'ar' ? 'اسم المتجر / العلامة التجارية (Store Name):' : 'Brand & Store Name (English):'}
+                </label>
                 <input
                   type="text"
-                  value={settingsForm.storeName}
-                  onChange={(e) => setSettingsForm({ ...settingsForm, storeName: e.target.value })}
+                  value={cmsLanguage === 'ar' ? settingsForm.storeName : (settingsForm.storeNameEn || '')}
+                  placeholder={cmsLanguage === 'ar' ? '2BabyPrint' : '2BabyPrint Egypt'}
+                  onChange={(e) =>
+                    cmsLanguage === 'ar'
+                      ? setSettingsForm({ ...settingsForm, storeName: e.target.value })
+                      : setSettingsForm({ ...settingsForm, storeNameEn: e.target.value })
+                  }
+                  dir={cmsLanguage === 'ar' ? 'rtl' : 'ltr'}
                   className="w-full px-3 py-2 bg-stone-50 border border-stone-300 rounded-xl text-xs font-bold text-stone-900"
                 />
               </div>
 
               <div>
-                <label className="text-stone-700 font-bold block mb-1">الشعار والوصف المختصر (Tagline):</label>
+                <label className="text-stone-700 font-bold block mb-1">
+                  {cmsLanguage === 'ar' ? 'الشعار والوصف المختصر (Tagline):' : 'Store Tagline (English):'}
+                </label>
                 <input
                   type="text"
-                  value={settingsForm.storeTagline || ''}
-                  placeholder="براند أزياء وملابس الأطفال المخصصة بالقطن المصري"
-                  onChange={(e) => setSettingsForm({ ...settingsForm, storeTagline: e.target.value })}
+                  value={cmsLanguage === 'ar' ? (settingsForm.storeTagline || '') : (settingsForm.storeTaglineEn || '')}
+                  placeholder={cmsLanguage === 'ar' ? 'براند أزياء وملابس الأطفال المخصصة بالقطن المصري' : 'Custom Egyptian Cotton Baby & Kids Apparel Brand'}
+                  onChange={(e) =>
+                    cmsLanguage === 'ar'
+                      ? setSettingsForm({ ...settingsForm, storeTagline: e.target.value })
+                      : setSettingsForm({ ...settingsForm, storeTaglineEn: e.target.value })
+                  }
+                  dir={cmsLanguage === 'ar' ? 'rtl' : 'ltr'}
                   className="w-full px-3 py-2 bg-stone-50 border border-stone-300 rounded-xl text-xs"
                 />
               </div>
@@ -335,13 +591,20 @@ export const StorefrontCms: React.FC<StorefrontCmsProps> = ({
                 </div>
 
                 <div>
-                  <label className="text-stone-600 block mb-1 text-[11px] font-semibold">نص شريط الإعلانات:</label>
+                  <label className="text-stone-600 block mb-1 text-[11px] font-semibold">
+                    {cmsLanguage === 'ar' ? 'نص شريط الإعلانات الترويجي:' : 'Announcement Bar Banner (English):'}
+                  </label>
                   <textarea
                     rows={2}
-                    value={settingsForm.announcementText}
-                    onChange={(e) => setSettingsForm({ ...settingsForm, announcementText: e.target.value })}
+                    value={cmsLanguage === 'ar' ? settingsForm.announcementText : (settingsForm.announcementTextEn || '')}
+                    onChange={(e) =>
+                      cmsLanguage === 'ar'
+                        ? setSettingsForm({ ...settingsForm, announcementText: e.target.value })
+                        : setSettingsForm({ ...settingsForm, announcementTextEn: e.target.value })
+                    }
+                    dir={cmsLanguage === 'ar' ? 'rtl' : 'ltr'}
                     className="w-full px-3 py-2 bg-white border border-stone-300 rounded-xl text-xs resize-none"
-                    placeholder="✨ شحن سريع داخل القاهرة والجيزة..."
+                    placeholder={cmsLanguage === 'ar' ? '✨ شحن سريع داخل القاهرة والجيزة...' : '✨ Fast 48h Delivery across Greater Cairo & Giza...'}
                   />
                 </div>
               </div>
@@ -355,14 +618,19 @@ export const StorefrontCms: React.FC<StorefrontCmsProps> = ({
       {/* ============================================================== */}
       {cmsSubTab === 'features' && (
         <div className="bg-white p-6 rounded-2xl border border-stone-200 space-y-6">
-          <div className="border-b border-stone-100 pb-3">
-            <h4 className="font-bold text-sm text-stone-900 flex items-center gap-2">
-              <Feather className="w-4 h-4 text-amber-600" />
-              <span>تخصيص شريط مميزات الخامات والطباعة (Features Bar)</span>
-            </h4>
-            <p className="text-xs text-stone-500 mt-0.5">
-              القيم المضافة والمزايا التنافسية التي تُشجع أولياء الأمور على الطلب بثقة وأمان
-            </p>
+          <div className="border-b border-stone-100 pb-3 flex items-center justify-between">
+            <div>
+              <h4 className="font-bold text-sm text-stone-900 flex items-center gap-2">
+                <Feather className="w-4 h-4 text-amber-600" />
+                <span>تخصيص شريط مميزات الخامات والطباعة (Features Bar)</span>
+              </h4>
+              <p className="text-xs text-stone-500 mt-0.5">
+                القيم المضافة والمزايا التنافسية التي تُشجع أولياء الأمور على الطلب بثقة وأمان ({cmsLanguage === 'ar' ? 'العربية' : 'English'})
+              </p>
+            </div>
+            <span className="text-[11px] font-bold px-2.5 py-1 bg-amber-50 text-amber-800 rounded-lg border border-amber-200">
+              {cmsLanguage === 'ar' ? 'تحرير النص العربي 🇸🇦' : 'Editing English 🇬🇧'}
+            </span>
           </div>
 
           <div className="grid grid-cols-1 md:grid-cols-2 gap-4 text-xs">
@@ -370,25 +638,35 @@ export const StorefrontCms: React.FC<StorefrontCmsProps> = ({
             <div className="p-4 bg-stone-50 rounded-2xl border border-stone-200 space-y-2">
               <div className="flex items-center gap-2 text-amber-800 font-bold pb-1 border-b border-stone-200">
                 <Feather className="w-4 h-4 text-amber-600" />
-                <span>الميزة الأولى (القطن والخامات):</span>
+                <span>{cmsLanguage === 'ar' ? 'الميزة الأولى (القطن والخامات):' : 'Feature 1 (Cotton & Material):'}</span>
               </div>
               <div>
-                <label className="text-stone-500 text-[11px] block">العنوان:</label>
+                <label className="text-stone-500 text-[11px] block">{cmsLanguage === 'ar' ? 'العنوان:' : 'Title:'}</label>
                 <input
                   type="text"
-                  value={settingsForm.feature1Title || ''}
-                  placeholder="قطن مصري 100% طبيعي"
-                  onChange={(e) => setSettingsForm({ ...settingsForm, feature1Title: e.target.value })}
+                  value={cmsLanguage === 'ar' ? (settingsForm.feature1Title || '') : (settingsForm.feature1TitleEn || '')}
+                  placeholder={cmsLanguage === 'ar' ? 'قطن مصري 100% طبيعي' : '100% Pure Egyptian Cotton'}
+                  onChange={(e) =>
+                    cmsLanguage === 'ar'
+                      ? setSettingsForm({ ...settingsForm, feature1Title: e.target.value })
+                      : setSettingsForm({ ...settingsForm, feature1TitleEn: e.target.value })
+                  }
+                  dir={cmsLanguage === 'ar' ? 'rtl' : 'ltr'}
                   className="w-full px-2.5 py-1.5 bg-white border border-stone-300 rounded-lg text-xs font-bold"
                 />
               </div>
               <div>
-                <label className="text-stone-500 text-[11px] block">الوصف:</label>
+                <label className="text-stone-500 text-[11px] block">{cmsLanguage === 'ar' ? 'الوصف:' : 'Description:'}</label>
                 <input
                   type="text"
-                  value={settingsForm.feature1Desc || ''}
-                  placeholder="خامات ناعمة كالحرير مسامية ومريحة لبشرة الرضع طوال اليوم"
-                  onChange={(e) => setSettingsForm({ ...settingsForm, feature1Desc: e.target.value })}
+                  value={cmsLanguage === 'ar' ? (settingsForm.feature1Desc || '') : (settingsForm.feature1DescEn || '')}
+                  placeholder={cmsLanguage === 'ar' ? 'خامات ناعمة كالحرير مسامية ومريحة...' : 'Silky soft, ultra-breathable fabric gentle on infant skin all day'}
+                  onChange={(e) =>
+                    cmsLanguage === 'ar'
+                      ? setSettingsForm({ ...settingsForm, feature1Desc: e.target.value })
+                      : setSettingsForm({ ...settingsForm, feature1DescEn: e.target.value })
+                  }
+                  dir={cmsLanguage === 'ar' ? 'rtl' : 'ltr'}
                   className="w-full px-2.5 py-1.5 bg-white border border-stone-300 rounded-lg text-xs"
                 />
               </div>
@@ -398,25 +676,35 @@ export const StorefrontCms: React.FC<StorefrontCmsProps> = ({
             <div className="p-4 bg-stone-50 rounded-2xl border border-stone-200 space-y-2">
               <div className="flex items-center gap-2 text-amber-800 font-bold pb-1 border-b border-stone-200">
                 <Printer className="w-4 h-4 text-amber-600" />
-                <span>الميزة الثانية (أحبار الطباعة):</span>
+                <span>{cmsLanguage === 'ar' ? 'الميزة الثانية (أحبار الطباعة):' : 'Feature 2 (Safe Eco Inks):'}</span>
               </div>
               <div>
-                <label className="text-stone-500 text-[11px] block">العنوان:</label>
+                <label className="text-stone-500 text-[11px] block">{cmsLanguage === 'ar' ? 'العنوان:' : 'Title:'}</label>
                 <input
                   type="text"
-                  value={settingsForm.feature2Title || ''}
-                  placeholder="أحبار مائية آمنة وصحية"
-                  onChange={(e) => setSettingsForm({ ...settingsForm, feature2Title: e.target.value })}
+                  value={cmsLanguage === 'ar' ? (settingsForm.feature2Title || '') : (settingsForm.feature2TitleEn || '')}
+                  placeholder={cmsLanguage === 'ar' ? 'أحبار مائية آمنة وصحية' : 'Safe Eco-Friendly Inks'}
+                  onChange={(e) =>
+                    cmsLanguage === 'ar'
+                      ? setSettingsForm({ ...settingsForm, feature2Title: e.target.value })
+                      : setSettingsForm({ ...settingsForm, feature2TitleEn: e.target.value })
+                  }
+                  dir={cmsLanguage === 'ar' ? 'rtl' : 'ltr'}
                   className="w-full px-2.5 py-1.5 bg-white border border-stone-300 rounded-lg text-xs font-bold"
                 />
               </div>
               <div>
-                <label className="text-stone-500 text-[11px] block">الوصف:</label>
+                <label className="text-stone-500 text-[11px] block">{cmsLanguage === 'ar' ? 'الوصف:' : 'Description:'}</label>
                 <input
                   type="text"
-                  value={settingsForm.feature2Desc || ''}
-                  placeholder="خالية تماماً من الكيماويات ومقاومة للغسيل المتكرر بثبات عالي"
-                  onChange={(e) => setSettingsForm({ ...settingsForm, feature2Desc: e.target.value })}
+                  value={cmsLanguage === 'ar' ? (settingsForm.feature2Desc || '') : (settingsForm.feature2DescEn || '')}
+                  placeholder={cmsLanguage === 'ar' ? 'خالية تماماً من الكيماويات ومقاومة للغسيل...' : 'Oeko-Tex certified water-based inks resilient to repeated washes'}
+                  onChange={(e) =>
+                    cmsLanguage === 'ar'
+                      ? setSettingsForm({ ...settingsForm, feature2Desc: e.target.value })
+                      : setSettingsForm({ ...settingsForm, feature2DescEn: e.target.value })
+                  }
+                  dir={cmsLanguage === 'ar' ? 'rtl' : 'ltr'}
                   className="w-full px-2.5 py-1.5 bg-white border border-stone-300 rounded-lg text-xs"
                 />
               </div>
@@ -426,25 +714,35 @@ export const StorefrontCms: React.FC<StorefrontCmsProps> = ({
             <div className="p-4 bg-stone-50 rounded-2xl border border-stone-200 space-y-2">
               <div className="flex items-center gap-2 text-amber-800 font-bold pb-1 border-b border-stone-200">
                 <Sparkles className="w-4 h-4 text-amber-600" />
-                <span>الميزة الثالثة (استوديو التخصيص):</span>
+                <span>{cmsLanguage === 'ar' ? 'الميزة الثالثة (استوديو التخصيص):' : 'Feature 3 (Interactive Live Studio):'}</span>
               </div>
               <div>
-                <label className="text-stone-500 text-[11px] block">العنوان:</label>
+                <label className="text-stone-500 text-[11px] block">{cmsLanguage === 'ar' ? 'العنوان:' : 'Title:'}</label>
                 <input
                   type="text"
-                  value={settingsForm.feature3Title || ''}
-                  placeholder="استوديو تصميم حي فوري"
-                  onChange={(e) => setSettingsForm({ ...settingsForm, feature3Title: e.target.value })}
+                  value={cmsLanguage === 'ar' ? (settingsForm.feature3Title || '') : (settingsForm.feature3TitleEn || '')}
+                  placeholder={cmsLanguage === 'ar' ? 'استوديو تصميم حي فوري' : 'Interactive Live Studio'}
+                  onChange={(e) =>
+                    cmsLanguage === 'ar'
+                      ? setSettingsForm({ ...settingsForm, feature3Title: e.target.value })
+                      : setSettingsForm({ ...settingsForm, feature3TitleEn: e.target.value })
+                  }
+                  dir={cmsLanguage === 'ar' ? 'rtl' : 'ltr'}
                   className="w-full px-2.5 py-1.5 bg-white border border-stone-300 rounded-lg text-xs font-bold"
                 />
               </div>
               <div>
-                <label className="text-stone-500 text-[11px] block">الوصف:</label>
+                <label className="text-stone-500 text-[11px] block">{cmsLanguage === 'ar' ? 'الوصف:' : 'Description:'}</label>
                 <input
                   type="text"
-                  value={settingsForm.feature3Desc || ''}
-                  placeholder="اكتبي اسم طفلك وعباراتك المفضلة وشاهدي النتيجة قبل الطباعة"
-                  onChange={(e) => setSettingsForm({ ...settingsForm, feature3Desc: e.target.value })}
+                  value={cmsLanguage === 'ar' ? (settingsForm.feature3Desc || '') : (settingsForm.feature3DescEn || '')}
+                  placeholder={cmsLanguage === 'ar' ? 'اكتبي اسم طفلك وشاهدي النتيجة قبل الطباعة' : 'Type your baby name, preview quotes, and see mockups before print'}
+                  onChange={(e) =>
+                    cmsLanguage === 'ar'
+                      ? setSettingsForm({ ...settingsForm, feature3Desc: e.target.value })
+                      : setSettingsForm({ ...settingsForm, feature3DescEn: e.target.value })
+                  }
+                  dir={cmsLanguage === 'ar' ? 'rtl' : 'ltr'}
                   className="w-full px-2.5 py-1.5 bg-white border border-stone-300 rounded-lg text-xs"
                 />
               </div>
@@ -454,25 +752,35 @@ export const StorefrontCms: React.FC<StorefrontCmsProps> = ({
             <div className="p-4 bg-stone-50 rounded-2xl border border-stone-200 space-y-2">
               <div className="flex items-center gap-2 text-amber-800 font-bold pb-1 border-b border-stone-200">
                 <Truck className="w-4 h-4 text-amber-600" />
-                <span>الميزة الرابعة (الشحن وسرعة التوصيل):</span>
+                <span>{cmsLanguage === 'ar' ? 'الميزة الرابعة (الشحن والتوصيل):' : 'Feature 4 (Fast Delivery):'}</span>
               </div>
               <div>
-                <label className="text-stone-500 text-[11px] block">العنوان:</label>
+                <label className="text-stone-500 text-[11px] block">{cmsLanguage === 'ar' ? 'العنوان:' : 'Title:'}</label>
                 <input
                   type="text"
-                  value={settingsForm.feature4Title || ''}
-                  placeholder="شحن سريع للقاهرة والجيزة"
-                  onChange={(e) => setSettingsForm({ ...settingsForm, feature4Title: e.target.value })}
+                  value={cmsLanguage === 'ar' ? (settingsForm.feature4Title || '') : (settingsForm.feature4TitleEn || '')}
+                  placeholder={cmsLanguage === 'ar' ? 'شحن سريع للقاهرة والجيزة' : 'Fast Cairo & Giza Delivery'}
+                  onChange={(e) =>
+                    cmsLanguage === 'ar'
+                      ? setSettingsForm({ ...settingsForm, feature4Title: e.target.value })
+                      : setSettingsForm({ ...settingsForm, feature4TitleEn: e.target.value })
+                  }
+                  dir={cmsLanguage === 'ar' ? 'rtl' : 'ltr'}
                   className="w-full px-2.5 py-1.5 bg-white border border-stone-300 rounded-lg text-xs font-bold"
                 />
               </div>
               <div>
-                <label className="text-stone-500 text-[11px] block">الوصف:</label>
+                <label className="text-stone-500 text-[11px] block">{cmsLanguage === 'ar' ? 'الوصف:' : 'Description:'}</label>
                 <input
                   type="text"
-                  value={settingsForm.feature4Desc || ''}
-                  placeholder="تسليم موثوق ومباشر لباب منزلك خلال 48 إلى 72 ساعة كحد أقصى"
-                  onChange={(e) => setSettingsForm({ ...settingsForm, feature4Desc: e.target.value })}
+                  value={cmsLanguage === 'ar' ? (settingsForm.feature4Desc || '') : (settingsForm.feature4DescEn || '')}
+                  placeholder={cmsLanguage === 'ar' ? 'تسليم موثوق ومباشر لباب منزلك خلال 48 إلى 72 ساعة' : 'Reliable doorstep shipping across Cairo & Giza within 48 to 72 hours'}
+                  onChange={(e) =>
+                    cmsLanguage === 'ar'
+                      ? setSettingsForm({ ...settingsForm, feature4Desc: e.target.value })
+                      : setSettingsForm({ ...settingsForm, feature4DescEn: e.target.value })
+                  }
+                  dir={cmsLanguage === 'ar' ? 'rtl' : 'ltr'}
                   className="w-full px-2.5 py-1.5 bg-white border border-stone-300 rounded-lg text-xs"
                 />
               </div>
@@ -486,48 +794,74 @@ export const StorefrontCms: React.FC<StorefrontCmsProps> = ({
       {/* ============================================================== */}
       {cmsSubTab === 'catalog' && (
         <div className="bg-white p-6 rounded-2xl border border-stone-200 space-y-6">
-          <div className="border-b border-stone-100 pb-3">
-            <h4 className="font-bold text-sm text-stone-900 flex items-center gap-2">
-              <LayoutGrid className="w-4 h-4 text-amber-600" />
-              <span>تخصيص كتالوج المنتجات وتوزيعة العرض (Product Catalog CMS)</span>
-            </h4>
-            <p className="text-xs text-stone-500 mt-0.5">
-              التحكم في عنوان القسم، رسالة التوجيه للتصميم، عدد الأعمدة، ونسبة أبعاد كروت المنتجات
-            </p>
+          <div className="border-b border-stone-100 pb-3 flex items-center justify-between">
+            <div>
+              <h4 className="font-bold text-sm text-stone-900 flex items-center gap-2">
+                <LayoutGrid className="w-4 h-4 text-amber-600" />
+                <span>تخصيص كتالوج المنتجات وتوزيعة العرض (Product Catalog CMS)</span>
+              </h4>
+              <p className="text-xs text-stone-500 mt-0.5">
+                التحكم في عنوان القسم، رسالة التوجيه للتصميم، عدد الأعمدة، ونسبة أبعاد كروت المنتجات ({cmsLanguage === 'ar' ? 'العربية' : 'English'})
+              </p>
+            </div>
+            <span className="text-[11px] font-bold px-2.5 py-1 bg-amber-50 text-amber-800 rounded-lg border border-amber-200">
+              {cmsLanguage === 'ar' ? 'تحرير النص العربي 🇸🇦' : 'Editing English 🇬🇧'}
+            </span>
           </div>
 
           <div className="grid grid-cols-1 md:grid-cols-2 gap-6 text-xs">
             {/* Texts & Prompts */}
             <div className="space-y-4">
               <div>
-                <label className="text-stone-700 font-bold block mb-1">شارة القسم العلوية (Tagline):</label>
+                <label className="text-stone-700 font-bold block mb-1">
+                  {cmsLanguage === 'ar' ? 'شارة القسم العلوية (Tagline):' : 'Catalog Tagline (English):'}
+                </label>
                 <input
                   type="text"
-                  value={settingsForm.catalogTagline || ''}
-                  placeholder="تشكيلة ملابس الأطفال الجاهزة للتخصيص"
-                  onChange={(e) => setSettingsForm({ ...settingsForm, catalogTagline: e.target.value })}
+                  value={cmsLanguage === 'ar' ? (settingsForm.catalogTagline || '') : (settingsForm.catalogTaglineEn || '')}
+                  placeholder={cmsLanguage === 'ar' ? 'تشكيلة ملابس الأطفال الجاهزة للتخصيص' : 'Ready-to-Customize Apparel Collection'}
+                  onChange={(e) =>
+                    cmsLanguage === 'ar'
+                      ? setSettingsForm({ ...settingsForm, catalogTagline: e.target.value })
+                      : setSettingsForm({ ...settingsForm, catalogTaglineEn: e.target.value })
+                  }
+                  dir={cmsLanguage === 'ar' ? 'rtl' : 'ltr'}
                   className="w-full px-3 py-2 bg-stone-50 border border-stone-300 rounded-xl text-xs"
                 />
               </div>
 
               <div>
-                <label className="text-stone-700 font-bold block mb-1">عنوان قسم الكتالوج الرئيسي (Title):</label>
+                <label className="text-stone-700 font-bold block mb-1">
+                  {cmsLanguage === 'ar' ? 'عنوان قسم الكتالوج الرئيسي (Title):' : 'Main Catalog Title (English):'}
+                </label>
                 <input
                   type="text"
-                  value={settingsForm.catalogTitle || ''}
-                  placeholder="اختر الموديل المناسب وابدأ التصميم"
-                  onChange={(e) => setSettingsForm({ ...settingsForm, catalogTitle: e.target.value })}
+                  value={cmsLanguage === 'ar' ? (settingsForm.catalogTitle || '') : (settingsForm.catalogTitleEn || '')}
+                  placeholder={cmsLanguage === 'ar' ? 'اختر الموديل المناسب وابدأ التصميم' : 'Choose a Garment and Start Customizing'}
+                  onChange={(e) =>
+                    cmsLanguage === 'ar'
+                      ? setSettingsForm({ ...settingsForm, catalogTitle: e.target.value })
+                      : setSettingsForm({ ...settingsForm, catalogTitleEn: e.target.value })
+                  }
+                  dir={cmsLanguage === 'ar' ? 'rtl' : 'ltr'}
                   className="w-full px-3 py-2 bg-stone-50 border border-stone-300 rounded-xl text-xs font-bold"
                 />
               </div>
 
               <div>
-                <label className="text-stone-700 font-bold block mb-1">رسالة التلميح التوجيهية للعميل (Hint Banner):</label>
+                <label className="text-stone-700 font-bold block mb-1">
+                  {cmsLanguage === 'ar' ? 'رسالة التلميح التوجيهية للعميل (Hint Banner):' : 'Guiding Hint Banner (English):'}
+                </label>
                 <textarea
                   rows={2}
-                  value={settingsForm.catalogHint || ''}
-                  placeholder="💡 اختاري القطعة أو الموديل أولاً بالأسفل لبدء تخصيص التصميم والألوان والاسم في الاستوديو الحي"
-                  onChange={(e) => setSettingsForm({ ...settingsForm, catalogHint: e.target.value })}
+                  value={cmsLanguage === 'ar' ? (settingsForm.catalogHint || '') : (settingsForm.catalogHintEn || '')}
+                  placeholder={cmsLanguage === 'ar' ? '💡 اختاري القطعة أو الموديل أولاً بالأسفل...' : '💡 Select a garment below to personalize names and colors in live studio'}
+                  onChange={(e) =>
+                    cmsLanguage === 'ar'
+                      ? setSettingsForm({ ...settingsForm, catalogHint: e.target.value })
+                      : setSettingsForm({ ...settingsForm, catalogHintEn: e.target.value })
+                  }
+                  dir={cmsLanguage === 'ar' ? 'rtl' : 'ltr'}
                   className="w-full px-3 py-2 bg-stone-50 border border-stone-300 rounded-xl text-xs resize-none"
                 />
               </div>
@@ -596,46 +930,72 @@ export const StorefrontCms: React.FC<StorefrontCmsProps> = ({
       {/* ============================================================== */}
       {cmsSubTab === 'templates' && (
         <div className="bg-white p-6 rounded-2xl border border-stone-200 space-y-6">
-          <div className="border-b border-stone-100 pb-3">
-            <h4 className="font-bold text-sm text-stone-900 flex items-center gap-2">
-              <Palette className="w-4 h-4 text-amber-600" />
-              <span>تخصيص قسم معرض القوالب والتصاميم الجاهزة</span>
-            </h4>
-            <p className="text-xs text-stone-500 mt-0.5">
-              تعديل نصوص وأوصاف القوالب السريعة لأعياد الميلاد والسبوع والمناسبات
-            </p>
+          <div className="border-b border-stone-100 pb-3 flex items-center justify-between">
+            <div>
+              <h4 className="font-bold text-sm text-stone-900 flex items-center gap-2">
+                <Palette className="w-4 h-4 text-amber-600" />
+                <span>تخصيص قسم معرض القوالب والتصاميم الجاهزة</span>
+              </h4>
+              <p className="text-xs text-stone-500 mt-0.5">
+                تعديل نصوص وأوصاف القوالب السريعة لأعياد الميلاد والسبوع والمناسبات ({cmsLanguage === 'ar' ? 'العربية' : 'English'})
+              </p>
+            </div>
+            <span className="text-[11px] font-bold px-2.5 py-1 bg-amber-50 text-amber-800 rounded-lg border border-amber-200">
+              {cmsLanguage === 'ar' ? 'تحرير النص العربي 🇸🇦' : 'Editing English 🇬🇧'}
+            </span>
           </div>
 
           <div className="max-w-xl space-y-4 text-xs">
             <div>
-              <label className="text-stone-700 font-bold block mb-1">شارة القسم العلوية (Tagline):</label>
+              <label className="text-stone-700 font-bold block mb-1">
+                {cmsLanguage === 'ar' ? 'شارة القسم العلوية (Tagline):' : 'Templates Tagline (English):'}
+              </label>
               <input
                 type="text"
-                value={settingsForm.templatesTagline || ''}
-                placeholder="مجموعات حصرية ومحبوبة للأمهات"
-                onChange={(e) => setSettingsForm({ ...settingsForm, templatesTagline: e.target.value })}
+                value={cmsLanguage === 'ar' ? (settingsForm.templatesTagline || '') : (settingsForm.templatesTaglineEn || '')}
+                placeholder={cmsLanguage === 'ar' ? 'مجموعات حصرية ومحبوبة للأمهات' : 'Exclusive Loved Collections for Moms'}
+                onChange={(e) =>
+                  cmsLanguage === 'ar'
+                    ? setSettingsForm({ ...settingsForm, templatesTagline: e.target.value })
+                    : setSettingsForm({ ...settingsForm, templatesTaglineEn: e.target.value })
+                }
+                dir={cmsLanguage === 'ar' ? 'rtl' : 'ltr'}
                 className="w-full px-3 py-2 bg-stone-50 border border-stone-300 rounded-xl text-xs"
               />
             </div>
 
             <div>
-              <label className="text-stone-700 font-bold block mb-1">العنوان الرئيسي للقسم (Title):</label>
+              <label className="text-stone-700 font-bold block mb-1">
+                {cmsLanguage === 'ar' ? 'العنوان الرئيسي للقسم (Title):' : 'Templates Section Title (English):'}
+              </label>
               <input
                 type="text"
-                value={settingsForm.templatesTitle || ''}
-                placeholder="قوالب وأفكار جاهزة للتصميم بنقرة واحدة"
-                onChange={(e) => setSettingsForm({ ...settingsForm, templatesTitle: e.target.value })}
+                value={cmsLanguage === 'ar' ? (settingsForm.templatesTitle || '') : (settingsForm.templatesTitleEn || '')}
+                placeholder={cmsLanguage === 'ar' ? 'قوالب وأفكار جاهزة للتصميم بنقرة واحدة' : 'Ready-made Design Ideas in One Click'}
+                onChange={(e) =>
+                  cmsLanguage === 'ar'
+                    ? setSettingsForm({ ...settingsForm, templatesTitle: e.target.value })
+                    : setSettingsForm({ ...settingsForm, templatesTitleEn: e.target.value })
+                }
+                dir={cmsLanguage === 'ar' ? 'rtl' : 'ltr'}
                 className="w-full px-3 py-2 bg-stone-50 border border-stone-300 rounded-xl text-xs font-bold"
               />
             </div>
 
             <div>
-              <label className="text-stone-700 font-bold block mb-1">النص الوصفي للقسم (Subtitle):</label>
+              <label className="text-stone-700 font-bold block mb-1">
+                {cmsLanguage === 'ar' ? 'النص الوصفي للقسم (Subtitle):' : 'Templates Subtitle (English):'}
+              </label>
               <textarea
                 rows={3}
-                value={settingsForm.templatesSubtitle || ''}
-                placeholder="تصاميم مختارة ومحبوبة لأعياد الميلاد والسبوع..."
-                onChange={(e) => setSettingsForm({ ...settingsForm, templatesSubtitle: e.target.value })}
+                value={cmsLanguage === 'ar' ? (settingsForm.templatesSubtitle || '') : (settingsForm.templatesSubtitleEn || '')}
+                placeholder={cmsLanguage === 'ar' ? 'تصاميم مختارة ومحبوبة لأعياد الميلاد والسبوع...' : 'Handcrafted designs for Sebou baby showers, birthdays, and Egyptian celebrations...'}
+                onChange={(e) =>
+                  cmsLanguage === 'ar'
+                    ? setSettingsForm({ ...settingsForm, templatesSubtitle: e.target.value })
+                    : setSettingsForm({ ...settingsForm, templatesSubtitleEn: e.target.value })
+                }
+                dir={cmsLanguage === 'ar' ? 'rtl' : 'ltr'}
                 className="w-full px-3 py-2 bg-stone-50 border border-stone-300 rounded-xl text-xs resize-none"
               />
             </div>
@@ -648,25 +1008,37 @@ export const StorefrontCms: React.FC<StorefrontCmsProps> = ({
       {/* ============================================================== */}
       {cmsSubTab === 'footer' && (
         <div className="bg-white p-6 rounded-2xl border border-stone-200 space-y-6">
-          <div className="border-b border-stone-100 pb-3">
-            <h4 className="font-bold text-sm text-stone-900 flex items-center gap-2">
-              <Phone className="w-4 h-4 text-amber-600" />
-              <span>تخصيص الفوتر، أرقام التواصل، وبيانات الدعم</span>
-            </h4>
-            <p className="text-xs text-stone-500 mt-0.5">
-              التحكم في أرقام الواتساب وخدمة العملاء وعنوان المقر وحقوق النشر
-            </p>
+          <div className="border-b border-stone-100 pb-3 flex items-center justify-between">
+            <div>
+              <h4 className="font-bold text-sm text-stone-900 flex items-center gap-2">
+                <Phone className="w-4 h-4 text-amber-600" />
+                <span>تخصيص الفوتر، أرقام التواصل، وبيانات الدعم</span>
+              </h4>
+              <p className="text-xs text-stone-500 mt-0.5">
+                التحكم في أرقام الواتساب وخدمة العملاء وعنوان المقر وحقوق النشر ({cmsLanguage === 'ar' ? 'العربية' : 'English'})
+              </p>
+            </div>
+            <span className="text-[11px] font-bold px-2.5 py-1 bg-amber-50 text-amber-800 rounded-lg border border-amber-200">
+              {cmsLanguage === 'ar' ? 'تحرير النص العربي 🇸🇦' : 'Editing English 🇬🇧'}
+            </span>
           </div>
 
           <div className="grid grid-cols-1 md:grid-cols-2 gap-5 text-xs">
             <div className="space-y-4">
               <div>
-                <label className="text-stone-700 font-bold block mb-1">نبذة المتجر في الفوتر (Bio):</label>
+                <label className="text-stone-700 font-bold block mb-1">
+                  {cmsLanguage === 'ar' ? 'نبذة المتجر في الفوتر (Bio):' : 'Footer Brand Bio (English):'}
+                </label>
                 <textarea
                   rows={3}
-                  value={settingsForm.footerBio || ''}
-                  placeholder="البراند المصري الرائد في طباعة وتخصيص ملابس الأطفال..."
-                  onChange={(e) => setSettingsForm({ ...settingsForm, footerBio: e.target.value })}
+                  value={cmsLanguage === 'ar' ? (settingsForm.footerBio || '') : (settingsForm.footerBioEn || '')}
+                  placeholder={cmsLanguage === 'ar' ? 'البراند المصري الرائد في طباعة وتخصيص ملابس الأطفال...' : 'Leading Egyptian brand in custom baby and children clothing with certified cotton...'}
+                  onChange={(e) =>
+                    cmsLanguage === 'ar'
+                      ? setSettingsForm({ ...settingsForm, footerBio: e.target.value })
+                      : setSettingsForm({ ...settingsForm, footerBioEn: e.target.value })
+                  }
+                  dir={cmsLanguage === 'ar' ? 'rtl' : 'ltr'}
                   className="w-full px-3 py-2 bg-stone-50 border border-stone-300 rounded-xl text-xs resize-none leading-relaxed"
                 />
               </div>
@@ -699,34 +1071,55 @@ export const StorefrontCms: React.FC<StorefrontCmsProps> = ({
 
             <div className="space-y-4">
               <div>
-                <label className="text-stone-700 font-bold block mb-1">عنوان المقر أو التوصيل بالقاهرة:</label>
+                <label className="text-stone-700 font-bold block mb-1">
+                  {cmsLanguage === 'ar' ? 'عنوان المقر أو التوصيل بالقاهرة:' : 'Headquarters / Delivery Address (English):'}
+                </label>
                 <input
                   type="text"
-                  value={settingsForm.footerAddress || ''}
-                  placeholder="القاهرة الجديدة، التجمع الخامس، جمهورية مصر العربية"
-                  onChange={(e) => setSettingsForm({ ...settingsForm, footerAddress: e.target.value })}
+                  value={cmsLanguage === 'ar' ? (settingsForm.footerAddress || '') : (settingsForm.footerAddressEn || '')}
+                  placeholder={cmsLanguage === 'ar' ? 'القاهرة الجديدة، التجمع الخامس، جمهورية مصر العربية' : 'New Cairo, 5th Settlement, Cairo, Egypt'}
+                  onChange={(e) =>
+                    cmsLanguage === 'ar'
+                      ? setSettingsForm({ ...settingsForm, footerAddress: e.target.value })
+                      : setSettingsForm({ ...settingsForm, footerAddressEn: e.target.value })
+                  }
+                  dir={cmsLanguage === 'ar' ? 'rtl' : 'ltr'}
                   className="w-full px-3 py-2 bg-stone-50 border border-stone-300 rounded-xl text-xs"
                 />
               </div>
 
               <div>
-                <label className="text-stone-700 font-bold block mb-1">ساعات العمل وخدمة العملاء:</label>
+                <label className="text-stone-700 font-bold block mb-1">
+                  {cmsLanguage === 'ar' ? 'ساعات العمل وخدمة العملاء:' : 'Working Hours (English):'}
+                </label>
                 <input
                   type="text"
-                  value={settingsForm.footerWorkingHours || ''}
-                  placeholder="خدمة العملاء يومياً من 9:00 صباحاً حتى 10:00 مساءً"
-                  onChange={(e) => setSettingsForm({ ...settingsForm, footerWorkingHours: e.target.value })}
+                  value={cmsLanguage === 'ar' ? (settingsForm.footerWorkingHours || '') : (settingsForm.footerWorkingHoursEn || '')}
+                  placeholder={cmsLanguage === 'ar' ? 'خدمة العملاء يومياً من 9:00 صباحاً حتى 10:00 مساءً' : 'Customer Support Daily from 9:00 AM to 10:00 PM'}
+                  onChange={(e) =>
+                    cmsLanguage === 'ar'
+                      ? setSettingsForm({ ...settingsForm, footerWorkingHours: e.target.value })
+                      : setSettingsForm({ ...settingsForm, footerWorkingHoursEn: e.target.value })
+                  }
+                  dir={cmsLanguage === 'ar' ? 'rtl' : 'ltr'}
                   className="w-full px-3 py-2 bg-stone-50 border border-stone-300 rounded-xl text-xs"
                 />
               </div>
 
               <div>
-                <label className="text-stone-700 font-bold block mb-1">نص حقوق النشر (Copyright Notice):</label>
+                <label className="text-stone-700 font-bold block mb-1">
+                  {cmsLanguage === 'ar' ? 'نص حقوق النشر (Copyright Notice):' : 'Copyright Notice (English):'}
+                </label>
                 <input
                   type="text"
-                  value={settingsForm.footerCopyright || ''}
-                  placeholder="© 2026 2BabyPrint مصر. جميع الحقوق محفوظة."
-                  onChange={(e) => setSettingsForm({ ...settingsForm, footerCopyright: e.target.value })}
+                  value={cmsLanguage === 'ar' ? (settingsForm.footerCopyright || '') : (settingsForm.footerCopyrightEn || '')}
+                  placeholder={cmsLanguage === 'ar' ? '© 2026 2BabyPrint مصر. جميع الحقوق محفوظة.' : '© 2026 2BabyPrint Egypt. All rights reserved.'}
+                  onChange={(e) =>
+                    cmsLanguage === 'ar'
+                      ? setSettingsForm({ ...settingsForm, footerCopyright: e.target.value })
+                      : setSettingsForm({ ...settingsForm, footerCopyrightEn: e.target.value })
+                  }
+                  dir={cmsLanguage === 'ar' ? 'rtl' : 'ltr'}
                   className="w-full px-3 py-2 bg-stone-50 border border-stone-300 rounded-xl text-xs"
                 />
               </div>

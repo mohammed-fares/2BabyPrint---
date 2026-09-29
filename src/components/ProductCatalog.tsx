@@ -67,13 +67,16 @@ export const ProductCatalog: React.FC<ProductCatalogProps> = ({
         <div className="flex flex-col md:flex-row md:items-end justify-between mb-8 gap-4">
           <div>
             <div className="text-xs font-semibold text-amber-700 mb-1">
-              {storeSettings?.catalogTagline || t.catalog.tagline}
+              {lang === 'en'
+                ? (storeSettings?.catalogTaglineEn || t.catalog.tagline)
+                : (storeSettings?.catalogTagline || t.catalog.tagline)}
             </div>
             <h2
               className="text-2xl sm:text-3xl font-extrabold text-stone-900 tracking-tight"
-              style={{ fontFamily: lang === 'ar' ? "'Cairo', sans-serif" : "'Plus Jakarta Sans', sans-serif" }}
             >
-              {storeSettings?.catalogTitle || t.catalog.title}
+              {lang === 'en'
+                ? (storeSettings?.catalogTitleEn || t.catalog.title)
+                : (storeSettings?.catalogTitle || t.catalog.title)}
             </h2>
           </div>
 
@@ -131,9 +134,9 @@ export const ProductCatalog: React.FC<ProductCatalogProps> = ({
           <div className="flex items-center gap-2">
             <Sparkles className="w-4 h-4 text-amber-600 shrink-0" />
             <span>
-              {storeSettings?.catalogHint || (lang === 'ar'
-                ? '💡 اختاري القطعة أو الموديل أولاً بالأسفل لبدء تخصيص التصميم والألوان والاسم في الاستوديو الحي'
-                : '💡 Select any garment below to open the Live Design Studio and customize it specifically')}
+              {lang === 'en'
+                ? (storeSettings?.catalogHintEn || '💡 Select any garment below to open the Live Design Studio and customize it specifically')
+                : (storeSettings?.catalogHint || '💡 اختاري القطعة أو الموديل أولاً بالأسفل لبدء تخصيص التصميم والألوان والاسم في الاستوديو الحي')}
             </span>
           </div>
           <span className="text-[11px] text-amber-800 font-mono hidden md:inline">

@@ -96,6 +96,14 @@ export default function App() {
     }
   });
 
+  // Apply dynamic fonts selected from control panel per language
+  useEffect(() => {
+    const arFont = storeSettings.fontArabic || 'Cairo';
+    const enFont = storeSettings.fontEnglish || 'Plus Jakarta Sans';
+    document.documentElement.style.setProperty('--font-ar', `'${arFont}', system-ui, -apple-system, sans-serif`);
+    document.documentElement.style.setProperty('--font-en', `'${enFont}', system-ui, -apple-system, sans-serif`);
+  }, [storeSettings.fontArabic, storeSettings.fontEnglish]);
+
   // Save changes
   useEffect(() => {
     localStorage.setItem('2babyprint_products', JSON.stringify(products));
@@ -348,7 +356,7 @@ export default function App() {
               }
 
               if (sectionKey === 'features') {
-                return <FeaturesBar key="features" t={t} storeSettings={storeSettings} />;
+                return <FeaturesBar key="features" t={t} lang={lang} storeSettings={storeSettings} />;
               }
 
               if (sectionKey === 'catalog') {

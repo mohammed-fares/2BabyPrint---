@@ -1,6 +1,7 @@
-import React, { useState } from 'react';
-import { Product, OrderDetails, Coupon, AgeGroup, ProductColor, StoreSettings } from '../../types';
+import React, { useState, useEffect } from 'react';
+import { Product, OrderDetails, Coupon, AgeGroup, ProductColor, StoreSettings, SocialCampaign } from '../../types';
 import { STANDARD_COLORS } from '../../data/products';
+import { INITIAL_CAMPAIGNS } from '../../data/initialCampaigns';
 import {
   TrendingUp,
   Package,
@@ -39,6 +40,7 @@ import {
 import { GarmentSilhouette } from '../DesignerStudio/GarmentSilhouette';
 import { exportPrintReadyFile, downloadDataUrl } from '../../utils/canvasRenderer';
 import { StorefrontCms } from './StorefrontCms';
+import { SocialAdsHub } from './SocialAdsHub';
 
 interface AdminDashboardProps {
   products: Product[];
@@ -57,7 +59,7 @@ interface AdminDashboardProps {
   onUpdateStoreSettings: (newSettings: StoreSettings) => void;
 }
 
-type AdminTab = 'overview' | 'orders' | 'products' | 'categories' | 'layout' | 'coupons';
+type AdminTab = 'overview' | 'orders' | 'products' | 'categories' | 'layout' | 'coupons' | 'marketing';
 type CmsSubTab = 'hero' | 'header' | 'features' | 'catalog' | 'templates' | 'footer' | 'sections' | 'sizeguide' | 'payments';
 
 const CURATED_MOCKUPS = [
@@ -116,6 +118,17 @@ export const AdminDashboard: React.FC<AdminDashboardProps> = ({
 
   // Category Management State
   const [newCategoryName, setNewCategoryName] = useState('');
+
+  // Social Media & AI Advertising Campaigns State
+  const [campaigns, setCampaigns] = useState<SocialCampaign[]>(() => {
+    const saved = localStorage.getItem('2babyprint_campaigns');
+    return saved ? JSON.parse(saved) : INITIAL_CAMPAIGNS;
+  });
+
+  const handleSaveCampaigns = (newCampaigns: SocialCampaign[]) => {
+    setCampaigns(newCampaigns);
+    localStorage.setItem('2babyprint_campaigns', JSON.stringify(newCampaigns));
+  };
 
   // Local settings copy for Layout customization
   const [settingsForm, setSettingsForm] = useState<StoreSettings>(storeSettings);
@@ -441,6 +454,18 @@ export const AdminDashboard: React.FC<AdminDashboardProps> = ({
             >
               <Tag className="w-3.5 h-3.5 text-amber-600" />
               <span>العروض والكوبونات ({coupons.length})</span>
+            </button>
+            <button
+              type="button"
+              onClick={() => setActiveTab('marketing')}
+              className={`px-3 py-1.5 text-xs font-semibold rounded-lg transition-all whitespace-nowrap flex items-center gap-1.5 ${
+                activeTab === 'marketing'
+                  ? 'bg-amber-500 text-stone-950 shadow-xs font-bold'
+                  : 'text-stone-600 hover:text-stone-900'
+              }`}
+            >
+              <Megaphone className="w-3.5 h-3.5 text-amber-600" />
+              <span>الإعلانات والحملات الذكية ({campaigns.length})</span>
             </button>
           </div>
         </div>
@@ -1088,6 +1113,15 @@ export const AdminDashboard: React.FC<AdminDashboardProps> = ({
               ))}
             </div>
           </div>
+        )}
+
+        {/* 7. SOCIAL MEDIA & AI MARKETING HUB TAB */}
+        {activeTab === 'marketing' && (
+          <SocialAdsHub
+            campaigns={campaigns}
+            onSaveCampaigns={handleSaveCampaigns}
+            products={products}
+          />
         )}
 
         {/* ============================================================== */}
