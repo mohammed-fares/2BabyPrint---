@@ -1,6 +1,16 @@
 import React from 'react';
-import { OrderDetails } from '../types';
-import { CheckCircle2, Package, Printer } from 'lucide-react';
+import { OrderDetails, StoreSettings } from '../types';
+import {
+  CheckCircle2,
+  Package,
+  Printer,
+  MessageCircle,
+  ExternalLink,
+  Truck,
+  Zap,
+  ShieldCheck,
+  Download,
+} from 'lucide-react';
 import { GarmentSilhouette } from './DesignerStudio/GarmentSilhouette';
 import { downloadDataUrl } from '../utils/canvasRenderer';
 import { Translations, Language } from '../i18n/translations';
@@ -8,38 +18,71 @@ import { Translations, Language } from '../i18n/translations';
 interface OrderSuccessModalProps {
   order: OrderDetails | null;
   onClose: () => void;
+  storeSettings?: StoreSettings;
   t: Translations;
   lang: Language;
 }
 
-export const OrderSuccessModal: React.FC<OrderSuccessModalProps> = ({ order, onClose, t, lang }) => {
+export const OrderSuccessModal: React.FC<OrderSuccessModalProps> = ({
+  order,
+  onClose,
+  storeSettings,
+  t,
+  lang,
+}) => {
   if (!order) return null;
+
+  const isEn = lang === 'en';
 
   const handleDownloadAllPrintFiles = () => {
     order.items.forEach((item, index) => {
       if (item.mockupPreviewUrl) {
         downloadDataUrl(
           item.mockupPreviewUrl,
-          `Order_${order.orderNumber}_Item_${index + 1}_DTF.png`
+          `Order_${order.orderNumber}_Item_${index + 1}_DTF_300DPI.png`
         );
       }
     });
   };
 
-  const getPaymentLabel = (method: string) => {
-    switch (method) {
-      case 'fawry':
-        return t.checkout.fawry;
-      case 'wallets':
-        return t.checkout.wallets;
-      case 'valu':
-        return t.checkout.valu;
-      case 'meeza':
-        return t.checkout.meeza;
-      case 'cod':
-      default:
-        return t.checkout.cod;
+  const printerPhone =
+    storeSettings?.printerWhatsapp ||
+    storeSettings?.supportWhatsapp ||
+    storeSettings?.contactWhatsapp ||
+    '01019998877';
+
+  const handleSendToPrinterWhatsApp = () => {
+    const cleanPhone = printerPhone.replace(/[^0-9]/g, '');
+
+    const itemsSummary = order.items
+      .map(
+        (it, idx) =>
+          `[قطعة ${idx + 1}] ${it.productName} | المقاس: ${it.size} | اللون: ${it.color.name} | الكمية: ${it.quantity} | طباعة: ${it.printSides.join(' + ')}`
+      )
+      .join('\n');
+
+    const message = `*طلب جديد لمطبعة 2BabyPrint رقم: ${order.orderNumber}*
+---------------------------------------
+👤 *العميل:* ${order.customerName}
+📞 *الهاتف:* ${order.phone}
+📍 *العنوان:* ${order.city} - ${order.address}
+🚚 *نوع الشحن:* ${
+      order.shippingType === 'express_uber'
+        ? 'توصيل فوري مستعجل اليوم (أوبر سكوتر)'
+        : 'شحن قياسي مجدول 48 ساعة'
     }
+💳 *الدفع:* ${order.paymentMethod === 'instapay' ? 'إنستاباي' : 'محفظة إلكترونية'} (مرجع: ${
+      order.instapayReference || 'مرفق الوصل'
+    })
+💰 *الإجمالي المدفوع:* ${order.total} ج.م
+---------------------------------------
+👕 *القطع المطلوبة مع تفاصيل التصميم:*
+${itemsSummary}
+${order.notes ? `\n📝 *ملاحظات خاصة:* ${order.notes}` : ''}
+---------------------------------------
+✅ تم تأكيد السداد وحفظ ملفات التصميم الأصلية بدقة 300 DPI`;
+
+    window.open(`https://wa.me/${cleanPhone}?text=${encodeURIComponent(message)}`, '_blank');
   };
 
   return (
@@ -61,10 +104,18 @@ export const OrderSuccessModal: React.FC<OrderSuccessModalProps> = ({ order, onC
             <span className="font-mono font-bold text-stone-800">{order.orderNumber}</span> ·{' '}
             {order.date}
           </p>
+
+          {/* Receipt verification status badge */}
+          {order.receiptVerified && (
+            <div className="inline-flex items-center gap-1.5 px-3 py-1 bg-emerald-50 border border-emerald-200 text-emerald-800 rounded-full text-[11px] font-bold mt-2">
+              <ShieldCheck className="w-3.5 h-3.5" />
+              <span>تم التحقق من وصل السداد وتأكيد الدفع آلياً (مرجع: {order.instapayReference})</span>
+            </div>
+          )}
         </div>
 
         {/* Receipt Details */}
-        <div className="p-6 overflow-y-auto space-y-5 text-xs text-stone-700">
+        <div className="p-6 overflow-y-auto space-y-4 text-xs text-stone-700">
           {/* Status step tracker */}
           <div className="p-3.5 bg-stone-50 rounded-xl border border-stone-200 flex items-center justify-between">
             <div className="flex items-center gap-2.5">
@@ -72,12 +123,14 @@ export const OrderSuccessModal: React.FC<OrderSuccessModalProps> = ({ order, onC
               <div>
                 <span className="font-bold text-stone-900 block">{t.orderSuccess.statusTitle}</span>
                 <span className="text-[11px] text-stone-500">
-                  {t.orderSuccess.statusDesc}
+                  {order.shippingType === 'express_uber'
+                    ? 'قيد التجهيز الفوري للتسليم لمندوب أوبر سكوتر اليوم'
+                    : t.orderSuccess.statusDesc}
                 </span>
               </div>
             </div>
             <span className="text-xs font-bold text-amber-800 bg-amber-100/80 px-2 py-0.5 rounded">
-              {t.orderSuccess.statusBadge}
+              {order.shippingType === 'express_uber' ? 'شحن فوري اليوم ⚡' : t.orderSuccess.statusBadge}
             </span>
           </div>
 
@@ -98,9 +151,10 @@ export const OrderSuccessModal: React.FC<OrderSuccessModalProps> = ({ order, onC
               </span>
             </div>
             <div>
-              <span className="text-stone-400 block text-[11px]">{t.orderSuccess.payment}</span>
+              <span className="text-stone-400 block text-[11px]">طريقة الشحن والدفع</span>
               <span className="font-semibold text-stone-900">
-                {getPaymentLabel(order.paymentMethod)}
+                {order.shippingType === 'express_uber' ? 'أوبر سكوتر فوري' : 'شحن قياسي 48 ساعة'} ·{' '}
+                {order.paymentMethod === 'instapay' ? 'إنستاباي' : 'محفظة إلكترونية'}
               </span>
             </div>
           </div>
@@ -127,7 +181,8 @@ export const OrderSuccessModal: React.FC<OrderSuccessModalProps> = ({ order, onC
                         {item.productName}
                       </span>
                       <span className="text-[11px] text-stone-400">
-                        {item.color.name} · {item.size} · {t.studio.quantity} {item.quantity}
+                        {item.color.name} · {item.size} · {t.studio.quantity} {item.quantity} · (
+                        {item.printSides.join(' + ')})
                       </span>
                     </div>
                   </div>
@@ -140,20 +195,29 @@ export const OrderSuccessModal: React.FC<OrderSuccessModalProps> = ({ order, onC
           </div>
 
           {/* Total */}
-          <div className="pt-3 border-t border-stone-200 flex justify-between items-center text-sm font-bold text-stone-900">
+          <div className="pt-2 border-t border-stone-200 flex justify-between items-center text-sm font-bold text-stone-900">
             <span>{t.orderSuccess.totalPaid}</span>
             <span className="font-mono text-base text-amber-800">{order.total} {t.orderSuccess.currency}</span>
           </div>
 
-          {/* Download print files for DTF production */}
-          <div className="pt-2">
+          {/* Direct Print House & WhatsApp Dispatch Action */}
+          <div className="grid grid-cols-1 sm:grid-cols-2 gap-2 pt-1">
+            <button
+              type="button"
+              onClick={handleSendToPrinterWhatsApp}
+              className="py-2.5 px-3 bg-emerald-600 hover:bg-emerald-700 text-white font-bold rounded-xl text-xs flex items-center justify-center gap-1.5 transition-colors shadow-2xs cursor-pointer"
+            >
+              <MessageCircle className="w-4 h-4" />
+              <span>إرسال تفاصيل الأوردر لواتساب المطبعة</span>
+            </button>
+
             <button
               type="button"
               onClick={handleDownloadAllPrintFiles}
-              className="w-full py-2.5 px-3 bg-stone-100 hover:bg-stone-200 text-stone-800 border border-stone-300 font-semibold rounded-xl text-xs flex items-center justify-center gap-2 transition-colors"
+              className="py-2.5 px-3 bg-stone-100 hover:bg-stone-200 text-stone-800 border border-stone-300 font-semibold rounded-xl text-xs flex items-center justify-center gap-1.5 transition-colors cursor-pointer"
             >
-              <Printer className="w-3.5 h-3.5 text-amber-700" />
-              <span>{t.orderSuccess.downloadDtfBtn}</span>
+              <Printer className="w-4 h-4 text-amber-700" />
+              <span>تحميل ملفات الطباعة 300 DPI</span>
             </button>
           </div>
         </div>
@@ -163,7 +227,7 @@ export const OrderSuccessModal: React.FC<OrderSuccessModalProps> = ({ order, onC
           <button
             type="button"
             onClick={onClose}
-            className="px-6 py-2.5 bg-amber-500 hover:bg-amber-600 text-stone-950 font-bold rounded-xl text-xs transition-colors"
+            className="px-6 py-2.5 bg-amber-500 hover:bg-amber-600 text-stone-950 font-bold rounded-xl text-xs transition-colors cursor-pointer"
           >
             {t.orderSuccess.backBtn}
           </button>

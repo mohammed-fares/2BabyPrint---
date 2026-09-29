@@ -20,6 +20,8 @@ import { AdminDashboard } from './components/Admin/AdminDashboard';
 import { PrinterPortal } from './components/Printer/PrinterPortal';
 import { CourierPortal } from './components/Courier/CourierPortal';
 import { StaffLoginModal } from './components/StaffLoginModal';
+import { HowItWorksTutorial } from './components/HowItWorksTutorial';
+import { CustomerAiChatbot } from './components/CustomerAiChatbot';
 import { translations, Language } from './i18n/translations';
 
 export default function App() {
@@ -356,7 +358,18 @@ export default function App() {
               }
 
               if (sectionKey === 'features') {
-                return <FeaturesBar key="features" t={t} lang={lang} storeSettings={storeSettings} />;
+                return (
+                  <React.Fragment key="features-and-tutorial">
+                    <FeaturesBar t={t} lang={lang} storeSettings={storeSettings} />
+                    <HowItWorksTutorial
+                      lang={lang}
+                      onStartDesigning={() => handleOpenCustomizerForProduct(products[0])}
+                      onExploreCatalog={() => {
+                        document.getElementById('catalog')?.scrollIntoView({ behavior: 'smooth' });
+                      }}
+                    />
+                  </React.Fragment>
+                );
               }
 
               if (sectionKey === 'catalog') {
@@ -399,6 +412,16 @@ export default function App() {
             t={t}
             lang={lang}
             storeSettings={storeSettings}
+          />
+
+          {/* Customer Smart AI Assistant & WhatsApp Connector */}
+          <CustomerAiChatbot
+            storeSettings={storeSettings}
+            lang={lang}
+            onOpenCatalog={() => {
+              document.getElementById('catalog')?.scrollIntoView({ behavior: 'smooth' });
+            }}
+            onOpenSizeGuide={() => setIsSizeGuideOpen(true)}
           />
         </>
       )}
@@ -449,6 +472,7 @@ export default function App() {
         cartItems={cartItems}
         onOrderPlaced={handleOrderPlaced}
         coupons={coupons}
+        storeSettings={storeSettings}
         t={t}
         lang={lang}
       />
@@ -458,6 +482,7 @@ export default function App() {
         <OrderSuccessModal
           order={confirmedOrder}
           onClose={() => setConfirmedOrder(null)}
+          storeSettings={storeSettings}
           t={t}
           lang={lang}
         />

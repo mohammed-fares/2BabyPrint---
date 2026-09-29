@@ -1,5 +1,14 @@
 import React, { useState, useEffect } from 'react';
-import { Product, OrderDetails, Coupon, AgeGroup, ProductColor, StoreSettings, SocialCampaign } from '../../types';
+import {
+  Product,
+  OrderDetails,
+  Coupon,
+  AgeGroup,
+  ProductColor,
+  StoreSettings,
+  SocialCampaign,
+  AdminNotification,
+} from '../../types';
 import { STANDARD_COLORS } from '../../data/products';
 import { INITIAL_CAMPAIGNS } from '../../data/initialCampaigns';
 import {
@@ -36,6 +45,10 @@ import {
   MessageCircle,
   Globe,
   Feather,
+  Bell,
+  Zap,
+  ExternalLink,
+  Send,
 } from 'lucide-react';
 import { GarmentSilhouette } from '../DesignerStudio/GarmentSilhouette';
 import { exportPrintReadyFile, downloadDataUrl } from '../../utils/canvasRenderer';
@@ -139,6 +152,114 @@ export const AdminDashboard: React.FC<AdminDashboardProps> = ({
   React.useEffect(() => {
     setSettingsForm(storeSettings);
   }, [storeSettings]);
+
+  // Notifications State (Internal notifications & WhatsApp urgent alerts)
+  const [notifications, setNotifications] = useState<AdminNotification[]>([
+    {
+      id: 'notif-1',
+      title: 'طلب مستعجل: أوبر سكوتر فوري اليوم ⚡',
+      message: 'طلب رقم #2BP-8421 للعميل نورهان الشريف - التجمع الخامس (توصيل فوري نفس اليوم)',
+      date: 'منذ دقيقتين',
+      type: 'urgent',
+      isRead: false,
+      priority: 'urgent',
+      orderNumber: '2BP-8421',
+    },
+    {
+      id: 'notif-2',
+      title: 'تم مسح واعتماد وصل إنستاباي بالذكاء الاصطناعي ✓',
+      message: 'تم فحص ومطابقة إيصال السداد الإلكتروني بنجاح بدقة 99.4% للطلب #2BP-3190',
+      date: 'منذ 15 دقيقة',
+      type: 'payment_verified',
+      isRead: false,
+      priority: 'high',
+      orderNumber: '2BP-3190',
+    },
+    {
+      id: 'notif-3',
+      title: 'أوردر جديد قيد التجهيز للمطبعة',
+      message: 'طلب سالوبيت السبوع الملكي قطعتين قطن مصري فاخر',
+      date: 'منذ ساعة',
+      type: 'order',
+      isRead: true,
+      priority: 'normal',
+    },
+  ]);
+  const [isNotifOpen, setIsNotifOpen] = useState(false);
+
+  // Product Color Editing State
+  const [newColorName, setNewColorName] = useState('');
+  const [newColorHex, setNewColorHex] = useState('#FFFFFF');
+
+  const handleAddColorToEdit = () => {
+    if (!editingProduct || !newColorName.trim()) return;
+    const newColor: ProductColor = {
+      id: `col-${Date.now()}`,
+      name: newColorName.trim(),
+      hex: newColorHex,
+      silhouetteUrl: editingProduct.colors[0]?.silhouetteUrl || '/src/assets/images/product_romper_studio_1790519885828.jpg',
+    };
+    setEditingProduct({
+      ...editingProduct,
+      colors: [...editingProduct.colors, newColor],
+    });
+    setNewColorName('');
+  };
+
+  const handleRemoveColorFromEdit = (colorId: string) => {
+    if (!editingProduct || editingProduct.colors.length <= 1) return;
+    setEditingProduct({
+      ...editingProduct,
+      colors: editingProduct.colors.filter((c) => c.id !== colorId),
+    });
+  };
+
+  // Dispatch order to Print House via WhatsApp or Telegram
+  const handleSendOrderToPrinter = (order: OrderDetails, platform: 'whatsapp' | 'telegram') => {
+    const printerPhone = storeSettings.printerWhatsapp || '01019998877';
+    const cleanPhone = printerPhone.replace(/[^0-9]/g, '');
+    const itemsList = order.items
+      .map(
+        (it, idx) =>
+          `[قطعة ${idx + 1}] ${it.productName}\n- المقاس: ${it.size} | اللون: ${it.color.name} (${it.color.hex})\n- الكمية: ${it.quantity}\n- جوانب الطباعة: ${it.printSides.join(' + ')}\n- عناصر التصميم: ${it.design.front.elements.length} أمام + ${it.design.back.elements.length} خلف`
+      )
+      .join('\n\n');
+
+    const msg = `*أمر تشغيل وطباعة جديد لمطبعة 2BabyPrint رقم: ${order.orderNumber}*
+---------------------------------------
+👤 *العميل:* ${order.customerName}
+📞 *الهاتف:* ${order.phone}
+📍 *العنوان:* ${order.city} - ${order.address}
+🚚 *الشحن:* ${order.shippingType === 'express_uber' ? '⚡ أوبر سكوتر فوري (اليوم)' : 'شحن قياسي 48 ساعة'}
+💳 *طريقة الدفع:* ${order.paymentMethod === 'instapay' ? 'إنستاباي' : 'محفظة إلكترونية'} (مرجع: ${order.instapayReference || 'مرفق الوصل'})
+💰 *الإجمالي المدفوع:* ${order.total} ج.م
+---------------------------------------
+👕 *القطع المطلوب طباعتها رقمياً (DTF):*
+${itemsList}
+${order.notes ? `\n📝 *ملاحظات:* ${order.notes}` : ''}
+---------------------------------------
+✅ تفاصيل التصاميم محفوظة وملفات الطباعة 300 DPI جاهزة للتحميل الفوري.`;
+
+    if (platform === 'whatsapp') {
+      window.open(`https://wa.me/${cleanPhone}?text=${encodeURIComponent(msg)}`, '_blank');
+    } else {
+      const tgUsername = (storeSettings.printerTelegram || 'BabyPrintProduction').replace('@', '');
+      window.open(`https://t.me/${tgUsername}?text=${encodeURIComponent(msg)}`, '_blank');
+    }
+  };
+
+  const handleSendUrgentAlert = (notif: AdminNotification) => {
+    const printerPhone = storeSettings.printerWhatsapp || '01019998877';
+    const cleanPhone = printerPhone.replace(/[^0-9]/g, '');
+    const msg = `🚨 *تنبيه إداري عاجل فائق الأهمية - 2BabyPrint*
+---------------------------------------
+📌 *الموضوع:* ${notif.title}
+📝 *التفاصيل:* ${notif.message}
+⏰ *التوقيت:* ${notif.date}
+---------------------------------------
+يرجى المتابعة الفورية والتجهيز العاجل للطلب.`;
+    window.open(`https://wa.me/${cleanPhone}?text=${encodeURIComponent(msg)}`, '_blank');
+  };
 
   // Analytics calculations
   const totalRevenue = orders.reduce((sum, o) => sum + o.total, 0);
@@ -362,10 +483,10 @@ export const AdminDashboard: React.FC<AdminDashboardProps> = ({
   };
 
   return (
-    <div className="min-h-screen bg-stone-100/90 py-8 px-4 sm:px-6">
+    <div className="min-h-screen bg-stone-100/90 py-8 px-4 sm:px-6 font-['Cairo']">
       <div className="max-w-7xl mx-auto space-y-6">
         {/* Dashboard Master Top Bar */}
-        <div className="bg-white p-6 rounded-2xl border border-stone-200/90 shadow-xs flex flex-col lg:flex-row lg:items-center justify-between gap-4">
+        <div className="bg-white p-6 rounded-2xl border border-stone-200/90 shadow-xs flex flex-col lg:flex-row lg:items-center justify-between gap-4 relative">
           <div>
             <div className="flex items-center gap-2">
               <h1 className="text-xl font-bold text-stone-900">
@@ -378,6 +499,75 @@ export const AdminDashboard: React.FC<AdminDashboardProps> = ({
             <p className="text-xs text-stone-500 mt-1">
               تحكم كامل في المنتجات والصور، ترتيب وتوزيعة الموقع، الأسعار والمقاسات، ومتابعة الطلبات بدقة للمطبعة والتوصيل
             </p>
+          </div>
+
+          {/* Quick Actions & Notification Bell */}
+          <div className="flex items-center gap-3">
+            <div className="relative">
+              <button
+                type="button"
+                onClick={() => setIsNotifOpen(!isNotifOpen)}
+                className="relative p-2.5 bg-stone-100 hover:bg-stone-200 text-stone-700 rounded-xl transition-colors cursor-pointer"
+                title="مركز الإشعارات والتنبيهات"
+              >
+                <Bell className="w-5 h-5" />
+                {notifications.some((n) => !n.isRead) && (
+                  <span className="absolute -top-1 -right-1 w-5 h-5 bg-red-500 text-white font-mono text-[10px] font-bold rounded-full flex items-center justify-center animate-pulse">
+                    {notifications.filter((n) => !n.isRead).length}
+                  </span>
+                )}
+              </button>
+
+              {/* Notifications Dropdown */}
+              {isNotifOpen && (
+                <div className="absolute left-0 sm:right-auto sm:left-0 top-12 z-50 w-80 sm:w-96 bg-white rounded-2xl border border-stone-200 shadow-2xl p-4 space-y-3 animate-in fade-in zoom-in-95 duration-150">
+                  <div className="flex items-center justify-between border-b border-stone-100 pb-2">
+                    <span className="font-bold text-xs text-stone-900">إشعارات الإدارة والطلبات الجديدة</span>
+                    <button
+                      type="button"
+                      onClick={() =>
+                        setNotifications((prev) => prev.map((n) => ({ ...n, isRead: true })))
+                      }
+                      className="text-[11px] text-amber-700 hover:underline cursor-pointer"
+                    >
+                      تحديد الكل كمقروء
+                    </button>
+                  </div>
+
+                  <div className="space-y-2 max-h-72 overflow-y-auto">
+                    {notifications.map((notif) => (
+                      <div
+                        key={notif.id}
+                        className={`p-2.5 rounded-xl border text-xs transition-colors ${
+                          notif.priority === 'urgent'
+                            ? 'bg-red-50/70 border-red-200'
+                            : notif.isRead
+                            ? 'bg-stone-50 border-stone-100'
+                            : 'bg-amber-50/60 border-amber-200'
+                        }`}
+                      >
+                        <div className="flex items-center justify-between mb-1">
+                          <span className="font-bold text-stone-900 flex items-center gap-1">
+                            {notif.priority === 'urgent' && <Zap className="w-3.5 h-3.5 text-red-600" />}
+                            <span>{notif.title}</span>
+                          </span>
+                          <span className="text-[10px] text-stone-400">{notif.date}</span>
+                        </div>
+                        <p className="text-[11px] text-stone-600 mb-2 leading-relaxed">{notif.message}</p>
+                        <button
+                          type="button"
+                          onClick={() => handleSendUrgentAlert(notif)}
+                          className="px-2 py-1 bg-emerald-600 hover:bg-emerald-700 text-white rounded-lg text-[10px] font-bold flex items-center gap-1 shadow-2xs cursor-pointer"
+                        >
+                          <MessageCircle className="w-3 h-3" />
+                          <span>إرسال تنبيه لواتساب المطبعة</span>
+                        </button>
+                      </div>
+                    ))}
+                  </div>
+                </div>
+              )}
+            </div>
           </div>
 
           {/* Navigation Tabs */}
@@ -795,13 +985,72 @@ export const AdminDashboard: React.FC<AdminDashboardProps> = ({
                       ))}
                     </div>
 
-                    <div className="pt-2 border-t border-stone-100 flex flex-col sm:flex-row sm:items-center justify-between text-xs text-stone-600 gap-2">
-                      <div>
-                        العنوان في القاهرة: <strong>{order.address}</strong>
-                        {order.notes && <span className="text-amber-800 mr-2">· ملاحظة: {order.notes}</span>}
+                    <div className="pt-3 border-t border-stone-100 flex flex-col md:flex-row md:items-center justify-between text-xs text-stone-600 gap-3">
+                      <div className="space-y-1">
+                        <div>
+                          العنوان في القاهرة: <strong>{order.address}</strong> ({order.city})
+                          {order.notes && <span className="text-amber-800 mr-2">· ملاحظة: {order.notes}</span>}
+                        </div>
+                        <div className="flex items-center gap-2 flex-wrap">
+                          <span
+                            className={`px-2 py-0.5 rounded font-bold text-[11px] ${
+                              order.shippingType === 'express_uber'
+                                ? 'bg-amber-100 text-amber-900 border border-amber-300'
+                                : 'bg-stone-100 text-stone-700'
+                            }`}
+                          >
+                            {order.shippingType === 'express_uber'
+                              ? '⚡ شحن فوري اليوم (أوبر سكوتر)'
+                              : '🚚 شحن قياسي 48 ساعة'}
+                          </span>
+
+                          {order.receiptVerified && (
+                            <span className="px-2 py-0.5 rounded bg-emerald-100 text-emerald-800 font-bold text-[11px]">
+                              ✓ تم مسح واعتماد الوصل ({order.instapayReference || 'معتمد'})
+                            </span>
+                          )}
+
+                          {order.receiptImageUrl && (
+                            <a
+                              href={order.receiptImageUrl}
+                              target="_blank"
+                              rel="noopener noreferrer"
+                              className="text-amber-700 hover:underline text-[11px] flex items-center gap-1"
+                            >
+                              <span>معاينة إيصال السداد المرفوع</span>
+                              <ExternalLink className="w-3 h-3" />
+                            </a>
+                          )}
+                        </div>
                       </div>
-                      <div className="font-bold text-stone-900">
-                        إجمالي الطلب: <span className="text-amber-900 font-mono text-sm">{order.total} ج.م</span> (مدفوع عبر {order.paymentMethod === 'instapay' ? 'إنستاباي' : order.paymentMethod === 'wallets' ? 'محافظ إلكترونية' : 'بطاقة بنكية'})
+
+                      <div className="flex flex-col sm:flex-row sm:items-center gap-2">
+                        <div className="font-bold text-stone-900 sm:text-left sm:ml-2">
+                          إجمالي الطلب: <span className="text-amber-900 font-mono text-sm">{order.total} ج.م</span>
+                        </div>
+
+                        {/* Dispatch to Print House Channels */}
+                        <div className="flex items-center gap-1.5">
+                          <button
+                            type="button"
+                            onClick={() => handleSendOrderToPrinter(order, 'whatsapp')}
+                            className="px-2.5 py-1.5 bg-emerald-600 hover:bg-emerald-700 text-white rounded-lg text-[11px] font-bold flex items-center gap-1 shadow-2xs cursor-pointer"
+                            title="إرسال بيانات الأوردر والتصميمات لواتساب المطبعة"
+                          >
+                            <MessageCircle className="w-3.5 h-3.5" />
+                            <span>واتساب المطبعة</span>
+                          </button>
+
+                          <button
+                            type="button"
+                            onClick={() => handleSendOrderToPrinter(order, 'telegram')}
+                            className="px-2.5 py-1.5 bg-sky-600 hover:bg-sky-700 text-white rounded-lg text-[11px] font-bold flex items-center gap-1 shadow-2xs cursor-pointer"
+                            title="إرسال لتلجرام المطبعة"
+                          >
+                            <Send className="w-3.5 h-3.5" />
+                            <span>تلجرام</span>
+                          </button>
+                        </div>
                       </div>
                     </div>
                   </div>
@@ -1408,7 +1657,104 @@ export const AdminDashboard: React.FC<AdminDashboardProps> = ({
                   </div>
                 </div>
 
-                {/* 4. Features bullet list */}
+                {/* 4. Available Colors Management */}
+                <div className="space-y-2 p-3 bg-stone-50 rounded-xl border border-stone-200">
+                  <div className="flex items-center justify-between">
+                    <label className="font-bold text-stone-800 flex items-center gap-1.5">
+                      <Palette className="w-4 h-4 text-amber-600" />
+                      <span>الألوان المتوفرة لهذا الموديل ({editingProduct.colors.length} ألوان):</span>
+                    </label>
+                    <span className="text-[10px] text-stone-500">
+                      يمكنك إضافة درجات ألوان جديدة أو حذف ألوان
+                    </span>
+                  </div>
+
+                  <div className="flex flex-wrap gap-2 items-center">
+                    {editingProduct.colors.map((col) => (
+                      <span
+                        key={col.id}
+                        className="bg-white border border-stone-300 px-2.5 py-1 rounded-xl text-xs font-semibold text-stone-800 flex items-center gap-2 shadow-2xs"
+                      >
+                        <span
+                          className="w-3.5 h-3.5 rounded-full border border-stone-400 shrink-0"
+                          style={{ backgroundColor: col.hex }}
+                        />
+                        <span>{col.name}</span>
+                        {editingProduct.colors.length > 1 && (
+                          <button
+                            type="button"
+                            onClick={() => handleRemoveColorFromEdit(col.id)}
+                            className="text-stone-400 hover:text-red-600 cursor-pointer"
+                            title="حذف هذا اللون"
+                          >
+                            <X className="w-3 h-3" />
+                          </button>
+                        )}
+                      </span>
+                    ))}
+                  </div>
+
+                  {/* Add New Color Form */}
+                  <div className="p-2.5 bg-white rounded-xl border border-stone-200 mt-2 space-y-2">
+                    <span className="text-[11px] font-bold text-stone-700 block">إضافة لون جديد للمنتج:</span>
+                    <div className="flex items-center gap-2">
+                      <input
+                        type="color"
+                        value={newColorHex}
+                        onChange={(e) => setNewColorHex(e.target.value)}
+                        className="w-9 h-9 p-0.5 rounded-lg border border-stone-300 cursor-pointer shrink-0"
+                        title="اختيار درجة اللون"
+                      />
+                      <input
+                        type="text"
+                        placeholder="اسم اللون (مثال: أزرق سماوي، سكري، وردي هادئ)..."
+                        value={newColorName}
+                        onChange={(e) => setNewColorName(e.target.value)}
+                        className="flex-1 px-3 py-1.5 bg-stone-50 border border-stone-300 rounded-lg text-xs"
+                      />
+                      <button
+                        type="button"
+                        onClick={handleAddColorToEdit}
+                        className="px-3.5 py-1.5 bg-amber-500 hover:bg-amber-600 text-stone-950 rounded-lg text-xs font-bold shrink-0 cursor-pointer"
+                      >
+                        + إضافة اللون
+                      </button>
+                    </div>
+
+                    {/* Quick Color Presets */}
+                    <div className="flex items-center gap-1.5 flex-wrap pt-1 text-[10px]">
+                      <span className="text-stone-400 font-medium">ألوان شائعة:</span>
+                      {[
+                        { name: 'أبيض ناصع', hex: '#FFFFFF' },
+                        { name: 'سكري عاجي', hex: '#FDFBF7' },
+                        { name: 'وردي باستيل', hex: '#FCE7F3' },
+                        { name: 'أزرق سماوي', hex: '#E0F2FE' },
+                        { name: 'رمادي فاتح', hex: '#F3F4F6' },
+                        { name: 'كحلي ملكي', hex: '#1E293B' },
+                        { name: 'أصفر ليموني', hex: '#FEF08A' },
+                        { name: 'أخضر نعناعي', hex: '#D1FAE5' },
+                      ].map((preset) => (
+                        <button
+                          key={preset.name}
+                          type="button"
+                          onClick={() => {
+                            setNewColorName(preset.name);
+                            setNewColorHex(preset.hex);
+                          }}
+                          className="px-2 py-0.5 bg-stone-100 hover:bg-amber-100 rounded border border-stone-200 text-stone-700 flex items-center gap-1 cursor-pointer"
+                        >
+                          <span
+                            className="w-2 h-2 rounded-full border border-stone-300"
+                            style={{ backgroundColor: preset.hex }}
+                          />
+                          <span>{preset.name}</span>
+                        </button>
+                      ))}
+                    </div>
+                  </div>
+                </div>
+
+                {/* 5. Features bullet list */}
                 <div className="space-y-2 p-3 bg-stone-50 rounded-xl border border-stone-200">
                   <label className="font-bold text-stone-800 block">
                     المميزات ونقاط الجودة (Bullet points):

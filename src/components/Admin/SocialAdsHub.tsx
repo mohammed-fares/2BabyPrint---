@@ -5,6 +5,9 @@ import {
   CampaignGoal,
   CampaignStatus,
   Product,
+  InfluencerPartner,
+  InfluencerStage,
+  SocialPostSchedule,
 } from '../../types';
 import {
   Megaphone,
@@ -33,12 +36,25 @@ import {
   Hash,
   ChevronDown,
   Info,
+  Gift,
+  Users,
+  Share2,
+  Calendar,
+  Send,
+  MessageCircle,
+  CheckCircle2,
+  Clock,
+  Heart,
+  Zap,
+  BarChart3,
+  Truck,
 } from 'lucide-react';
 import {
   generateAiCampaign,
   analyzeAdCreativeQuality,
   CampaignGenerationRequest,
 } from '../../utils/aiCampaignService';
+import { INITIAL_INFLUENCERS, INITIAL_POST_SCHEDULES } from '../../data/initialInfluencers';
 
 interface SocialAdsHubProps {
   campaigns: SocialCampaign[];
@@ -46,7 +62,7 @@ interface SocialAdsHubProps {
   products: Product[];
 }
 
-type HubTab = 'monitor' | 'create_ai' | 'simulator';
+type HubTab = 'monitor' | 'create_ai' | 'simulator' | 'influencers' | 'social_pages' | 'learning_engine';
 
 export const SocialAdsHub: React.FC<SocialAdsHubProps> = ({
   campaigns,
@@ -56,6 +72,63 @@ export const SocialAdsHub: React.FC<SocialAdsHubProps> = ({
   const [activeTab, setActiveTab] = useState<HubTab>('monitor');
   const [platformFilter, setPlatformFilter] = useState<string>('all');
   const [copiedId, setCopiedId] = useState<string | null>(null);
+
+  // Influencers & PR Gifting State
+  const [influencers, setInfluencers] = useState<InfluencerPartner[]>(() => {
+    try {
+      const saved = localStorage.getItem('2babyprint_influencers');
+      return saved ? JSON.parse(saved) : INITIAL_INFLUENCERS;
+    } catch {
+      return INITIAL_INFLUENCERS;
+    }
+  });
+
+  const [isAddInfluencerModalOpen, setIsAddInfluencerModalOpen] = useState(false);
+  const [newInfName, setNewInfName] = useState('');
+  const [newInfHandle, setNewInfHandle] = useState('');
+  const [newInfPlatform, setNewInfPlatform] = useState<'instagram' | 'tiktok' | 'facebook'>('instagram');
+  const [newInfFollowers, setNewInfFollowers] = useState('');
+  const [newInfLocation, setNewInfLocation] = useState('القاهرة الجديدة');
+  const [newInfMomName, setNewInfMomName] = useState('');
+  const [newInfChildName, setNewInfChildName] = useState('');
+  const [newInfChildAge, setNewInfChildAge] = useState('');
+  const [newInfCustomNotes, setNewInfCustomNotes] = useState('');
+  const [newInfPromoCode, setNewInfPromoCode] = useState('');
+
+  // Social Post Scheduling State
+  const [postSchedules, setPostSchedules] = useState<SocialPostSchedule[]>(() => {
+    try {
+      const saved = localStorage.getItem('2babyprint_post_schedules');
+      return saved ? JSON.parse(saved) : INITIAL_POST_SCHEDULES;
+    } catch {
+      return INITIAL_POST_SCHEDULES;
+    }
+  });
+
+  const [isAddPostModalOpen, setIsAddPostModalOpen] = useState(false);
+  const [newPostPlatform, setNewPostPlatform] = useState<SocialPlatform>('instagram');
+  const [newPostTitle, setNewPostTitle] = useState('');
+  const [newPostContent, setNewPostContent] = useState('');
+  const [newPostTime, setNewPostTime] = useState('اليوم، 8:00 مساءً');
+  const [newPostMediaType, setNewPostMediaType] = useState<'reel' | 'image' | 'story' | 'carousel'>('reel');
+
+  const handleUpdateInfluencers = (updated: InfluencerPartner[]) => {
+    setInfluencers(updated);
+    try {
+      localStorage.setItem('2babyprint_influencers', JSON.stringify(updated));
+    } catch (e) {
+      console.error(e);
+    }
+  };
+
+  const handleUpdatePosts = (updated: SocialPostSchedule[]) => {
+    setPostSchedules(updated);
+    try {
+      localStorage.setItem('2babyprint_post_schedules', JSON.stringify(updated));
+    } catch (e) {
+      console.error(e);
+    }
+  };
 
   // New Campaign Form / AI Generator State
   const [selectedPlatform, setSelectedPlatform] = useState<SocialPlatform>('instagram');
@@ -268,43 +341,84 @@ ${campaign.adCreative.videoScript ? `\n[سيناريو ريلز/فيديو]:\n- 
       </div>
 
       {/* 2. Primary Tabs */}
-      <div className="flex items-center justify-between border-b border-stone-200 pb-2">
-        <div className="flex items-center gap-1.5 p-1 bg-stone-100 rounded-xl">
+      <div className="flex flex-col lg:flex-row lg:items-center justify-between gap-3 border-b border-stone-200 pb-2">
+        <div className="flex flex-wrap items-center gap-1.5 p-1 bg-stone-100 rounded-xl">
           <button
             type="button"
             onClick={() => setActiveTab('monitor')}
-            className={`px-4 py-2 text-xs font-bold rounded-lg transition-all flex items-center gap-2 cursor-pointer ${
+            className={`px-3.5 py-2 text-xs font-bold rounded-lg transition-all flex items-center gap-1.5 cursor-pointer ${
               activeTab === 'monitor'
                 ? 'bg-white text-stone-950 shadow-xs'
                 : 'text-stone-600 hover:text-stone-900'
             }`}
           >
             <TrendingUp className="w-4 h-4 text-emerald-600" />
-            <span>مراقبة الحملات الحية ({campaigns.length})</span>
+            <span>مراقبة الحملات ({campaigns.length})</span>
           </button>
+
           <button
             type="button"
             onClick={() => setActiveTab('create_ai')}
-            className={`px-4 py-2 text-xs font-bold rounded-lg transition-all flex items-center gap-2 cursor-pointer ${
+            className={`px-3.5 py-2 text-xs font-bold rounded-lg transition-all flex items-center gap-1.5 cursor-pointer ${
               activeTab === 'create_ai'
                 ? 'bg-white text-stone-950 shadow-xs'
                 : 'text-stone-600 hover:text-stone-900'
             }`}
           >
             <Sparkles className="w-4 h-4 text-amber-600" />
-            <span>منشئ الحملات وسيناريوهات الريلز (AI Studio)</span>
+            <span>منشئ الحملات والريلز</span>
           </button>
+
+          <button
+            type="button"
+            onClick={() => setActiveTab('influencers')}
+            className={`px-3.5 py-2 text-xs font-bold rounded-lg transition-all flex items-center gap-1.5 cursor-pointer ${
+              activeTab === 'influencers'
+                ? 'bg-white text-stone-950 shadow-xs'
+                : 'text-stone-600 hover:text-stone-900'
+            }`}
+          >
+            <Gift className="w-4 h-4 text-rose-600" />
+            <span>المؤثرات وهدايا الدعاية ({influencers.length})</span>
+          </button>
+
+          <button
+            type="button"
+            onClick={() => setActiveTab('social_pages')}
+            className={`px-3.5 py-2 text-xs font-bold rounded-lg transition-all flex items-center gap-1.5 cursor-pointer ${
+              activeTab === 'social_pages'
+                ? 'bg-white text-stone-950 shadow-xs'
+                : 'text-stone-600 hover:text-stone-900'
+            }`}
+          >
+            <Share2 className="w-4 h-4 text-sky-600" />
+            <span>صفحات السوشيال وجدول النشر</span>
+          </button>
+
+          <button
+            type="button"
+            onClick={() => setActiveTab('learning_engine')}
+            className={`px-3.5 py-2 text-xs font-bold rounded-lg transition-all flex items-center gap-1.5 cursor-pointer ${
+              activeTab === 'learning_engine'
+                ? 'bg-white text-stone-950 shadow-xs'
+                : 'text-stone-600 hover:text-stone-900'
+            }`}
+          >
+            <Zap className="w-4 h-4 text-amber-500" />
+            <span>محرك التعلّم الذكي وتحليل السوق</span>
+          </button>
+
           <button
             type="button"
             onClick={() => setActiveTab('simulator')}
-            className={`px-4 py-2 text-xs font-bold rounded-lg transition-all flex items-center gap-2 cursor-pointer ${
+            className={`px-3.5 py-2 text-xs font-bold rounded-lg transition-all flex items-center gap-1.5 cursor-pointer ${
               activeTab === 'simulator'
                 ? 'bg-white text-stone-950 shadow-xs'
                 : 'text-stone-600 hover:text-stone-900'
             }`}
           >
             <Award className="w-4 h-4 text-purple-600" />
-            <span>محاكي الجودة وتوقعات العائد (ROAS Predictor)</span>
+            <span>محاكي العائد (ROAS)</span>
           </button>
         </div>
 
@@ -1053,6 +1167,790 @@ ${campaign.adCreative.videoScript ? `\n[سيناريو ريلز/فيديو]:\n- 
           </div>
         </div>
       )}
+
+      {/* 6. TAB 4: INFLUENCERS & PR GIFTING PIPELINE */}
+      {activeTab === 'influencers' && (
+        <div className="space-y-6">
+          {/* Header & KPI Summary */}
+          <div className="grid grid-cols-2 sm:grid-cols-4 gap-3">
+            <div className="bg-white p-4 rounded-xl border border-stone-200 shadow-2xs">
+              <span className="text-xs text-stone-500 block">إجمالي المؤثرات الشريكات</span>
+              <span className="text-xl font-bold text-stone-900 mt-1 block">{influencers.length}</span>
+            </div>
+            <div className="bg-white p-4 rounded-xl border border-stone-200 shadow-2xs">
+              <span className="text-xs text-stone-500 block">هدايا قيد التجهيز بالمطبعة</span>
+              <span className="text-xl font-bold text-amber-600 mt-1 block">
+                {influencers.filter((i) => i.status === 'gift_in_production').length}
+              </span>
+            </div>
+            <div className="bg-white p-4 rounded-xl border border-stone-200 shadow-2xs">
+              <span className="text-xs text-stone-500 block">فيديوهات وريلز منشورة</span>
+              <span className="text-xl font-bold text-purple-600 mt-1 block">
+                {influencers.filter((i) => i.status === 'reel_published' || i.status === 'active_ambassador').length}
+              </span>
+            </div>
+            <div className="bg-white p-4 rounded-xl border border-stone-200 shadow-2xs">
+              <span className="text-xs text-stone-500 block">مبيعات محققة من أكواد الخصم</span>
+              <span className="text-xl font-bold text-emerald-600 mt-1 block">
+                {influencers.reduce((acc, i) => acc + (i.totalSalesValue || 0), 0).toLocaleString()} ج.م
+              </span>
+            </div>
+          </div>
+
+          {/* Action Bar */}
+          <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-3 bg-white p-4 rounded-2xl border border-stone-200">
+            <div>
+              <h3 className="font-bold text-stone-900 text-sm flex items-center gap-2">
+                <Gift className="w-4 h-4 text-rose-600" />
+                <span>برنامج الدعاية والإهداءات المخصصة للمؤثرات وأطفالهن (PR Gifting)</span>
+              </h3>
+              <p className="text-xs text-stone-500 mt-0.5">
+                إرسال ملابس قطنية بأسماء أطفال المؤثرات وصياغة رسائل دعائية ترغيبية تزيد انتشار المتجر على إنستغرام وتيك توك
+              </p>
+            </div>
+            <button
+              type="button"
+              onClick={() => setIsAddInfluencerModalOpen(true)}
+              className="px-4 py-2 bg-stone-900 hover:bg-stone-800 text-white rounded-xl text-xs font-bold flex items-center gap-1.5 shadow-2xs transition-transform active:scale-98 cursor-pointer shrink-0"
+            >
+              <Plus className="w-4 h-4 text-amber-400" />
+              <span>إضافة مؤثرة / صانعة محتوى جديدة</span>
+            </button>
+          </div>
+
+          {/* Influencer Cards List */}
+          <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+            {influencers.map((inf) => (
+              <div
+                key={inf.id}
+                className="bg-white p-5 rounded-2xl border border-stone-200 hover:border-amber-400 transition-all shadow-2xs space-y-4"
+              >
+                {/* Influencer Profile Header */}
+                <div className="flex items-start justify-between gap-3">
+                  <div className="flex items-center gap-3">
+                    <div className="w-12 h-12 rounded-full bg-rose-100 border border-rose-200 flex items-center justify-center text-rose-700 font-bold text-base">
+                      {(inf.momName || inf.name || 'M').slice(0, 1)}
+                    </div>
+                    <div>
+                      <div className="flex items-center gap-2">
+                        <h4 className="font-bold text-stone-900 text-sm">{inf.name}</h4>
+                        <span className="text-[10px] font-bold px-2 py-0.5 rounded-full bg-stone-100 text-stone-700">
+                          {inf.platform === 'instagram' ? '📸 إنستغرام' : inf.platform === 'tiktok' ? '🎵 تيك توك' : '📘 فيسبوك'}
+                        </span>
+                      </div>
+                      <div className="flex items-center gap-2 text-xs text-stone-500 mt-0.5 font-mono">
+                        <span>{inf.handle}</span>
+                        <span>•</span>
+                        <span>{inf.followers} متابع</span>
+                        <span>•</span>
+                        <span>{inf.location}</span>
+                      </div>
+                    </div>
+                  </div>
+
+                  <button
+                    type="button"
+                    onClick={() => {
+                      if (confirm(`هل ترغب في حذف ${inf.name} من قائمة المؤثرات؟`)) {
+                        handleUpdateInfluencers(influencers.filter((i) => i.id !== inf.id));
+                      }
+                    }}
+                    className="text-stone-400 hover:text-red-600 p-1 rounded-lg transition-colors cursor-pointer"
+                    title="حذف المؤثرة"
+                  >
+                    <Trash2 className="w-4 h-4" />
+                  </button>
+                </div>
+
+                {/* Children & Personalization Details */}
+                <div className="p-3 bg-stone-50 rounded-xl border border-stone-200/80 space-y-2">
+                  <div className="flex items-center justify-between text-xs font-semibold text-stone-700">
+                    <span className="flex items-center gap-1.5">
+                      <Heart className="w-3.5 h-3.5 text-rose-500" />
+                      <span>الأطفال المستهدفون بالهدية المخصصة:</span>
+                    </span>
+                    <span className="text-[11px] text-stone-500">مطبوعة بالأسماء</span>
+                  </div>
+                  <div className="flex flex-wrap gap-1.5">
+                    {(inf.children || []).map((ch, cIdx) => (
+                      <span
+                        key={cIdx}
+                        className="px-2.5 py-1 bg-white border border-stone-200 text-stone-800 rounded-lg text-xs font-bold flex items-center gap-1"
+                      >
+                        <span>{ch.gender === 'boy' ? '👶' : '👧'}</span>
+                        <span>{ch.name} ({ch.age})</span>
+                        {ch.favoriteColor && <span className="text-[10px] text-stone-500">[{ch.favoriteColor}]</span>}
+                      </span>
+                    ))}
+                  </div>
+
+                  <div className="text-xs text-stone-600 bg-white p-2.5 rounded-lg border border-stone-200/60 mt-1">
+                    <strong className="text-stone-800">تفاصيل الطقم المهداة: </strong>
+                    <span>{inf.customOutfitNotes}</span>
+                  </div>
+                </div>
+
+                {/* Stage Pipeline & Promo Performance */}
+                <div className="grid grid-cols-1 sm:grid-cols-2 gap-3 pt-1">
+                  <div>
+                    <label className="block text-[11px] font-bold text-stone-600 mb-1">
+                      مرحلة التواصل والتعاون:
+                    </label>
+                    <select
+                      value={inf.status}
+                      onChange={(e) => {
+                        const newStatus = e.target.value as InfluencerStage;
+                        handleUpdateInfluencers(
+                          influencers.map((i) => (i.id === inf.id ? { ...i, status: newStatus } : i))
+                        );
+                      }}
+                      className="w-full text-xs font-bold p-2 bg-stone-50 border border-stone-300 rounded-xl text-stone-800"
+                    >
+                      <option value="identified">🔍 تم تحديد الحساب (Identified)</option>
+                      <option value="contacted">💬 تم التواصل المبدئي (Contacted)</option>
+                      <option value="details_confirmed">📝 تم تأكيد المقاسات والعنوان</option>
+                      <option value="gift_in_production">🏭 الهدية قيد الطباعة بالمطبعة</option>
+                      <option value="delivered">📦 تم تسليم الهدية للمؤثرة</option>
+                      <option value="reel_published">✨ تم نشر الريلز والمراجعة</option>
+                      <option value="active_ambassador">👑 سفيرة دائمة للبراند</option>
+                    </select>
+                  </div>
+
+                  <div>
+                    <label className="block text-[11px] font-bold text-stone-600 mb-1">
+                      كود الخصم والمبيعات:
+                    </label>
+                    <div className="p-2 bg-emerald-50 border border-emerald-200 rounded-xl flex items-center justify-between text-xs">
+                      <div>
+                        <span className="font-mono font-bold text-emerald-800">{inf.promoCode || inf.couponCode || 'لا يوجد'}</span>
+                        <div className="text-[10px] text-emerald-700">{inf.ordersDriven || 0} طلب مسجل</div>
+                      </div>
+                      <span className="font-black text-emerald-900 font-mono text-sm">
+                        {(inf.totalSalesValue || 0).toLocaleString()} ج.م
+                      </span>
+                    </div>
+                  </div>
+                </div>
+
+                {/* AI Persuasive Pitch Action */}
+                <div className="border-t border-stone-100 pt-3 space-y-2">
+                  <div className="flex items-center justify-between">
+                    <span className="text-xs font-bold text-purple-900 flex items-center gap-1.5">
+                      <Sparkles className="w-3.5 h-3.5 text-purple-600" />
+                      <span>رسالة العرض الترغيبي المقترحة (AI Pitch):</span>
+                    </span>
+                    <button
+                      type="button"
+                      onClick={() => {
+                        if (inf.aiPitchDraft) {
+                          navigator.clipboard.writeText(inf.aiPitchDraft);
+                          setCopiedId(`pitch-${inf.id}`);
+                          setTimeout(() => setCopiedId(null), 2500);
+                        }
+                      }}
+                      className="text-xs text-purple-700 hover:text-purple-900 font-bold flex items-center gap-1 cursor-pointer"
+                    >
+                      {copiedId === `pitch-${inf.id}` ? (
+                        <>
+                          <Check className="w-3.5 h-3.5 text-emerald-600" />
+                          <span className="text-emerald-600">تم النسخ!</span>
+                        </>
+                      ) : (
+                        <>
+                          <Copy className="w-3.5 h-3.5" />
+                          <span>نسخ نص العرض لـ DM</span>
+                        </>
+                      )}
+                    </button>
+                  </div>
+
+                  {inf.aiPitchDraft && (
+                    <div className="p-3 bg-purple-50/60 rounded-xl border border-purple-100 text-xs text-stone-700 leading-relaxed max-h-28 overflow-y-auto whitespace-pre-line font-sans">
+                      {inf.aiPitchDraft}
+                    </div>
+                  )}
+
+                  {/* Dispatch PR Order to Print House WhatsApp */}
+                  <div className="flex items-center gap-2 pt-1">
+                    <a
+                      href={`https://wa.me/201019998877?text=${encodeURIComponent(
+                        `*أمر تشغيل هدية دعاية PR لمؤثرة: ${inf.name}*\n` +
+                        `👤 الحساب: ${inf.handle} (${inf.followers || inf.followersCount || ''})\n` +
+                        `👶 أسماء الأطفال: ${(inf.children || []).map((c) => `${c.name} (${c.age})`).join(' + ')}\n` +
+                        `👕 تفاصيل القطع المطلوبة: ${inf.customOutfitNotes || inf.giftOrderDetails || ''}\n` +
+                        `📍 العنوان: ${inf.location || ''}\n` +
+                        `🌟 التغليف: بوكس VIP فاخر للبراند مع كرت إهداء شخصي.`
+                      )}`}
+                      target="_blank"
+                      rel="noopener noreferrer"
+                      className="w-full py-2 bg-emerald-600 hover:bg-emerald-700 text-white rounded-xl text-xs font-bold flex items-center justify-center gap-2 shadow-2xs transition-colors"
+                    >
+                      <MessageCircle className="w-4 h-4" />
+                      <span>إرسال أمر الهدية لواتساب المطبعة للطباعة الفورية</span>
+                    </a>
+                  </div>
+                </div>
+              </div>
+            ))}
+          </div>
+
+          {/* Modal: Add New Influencer */}
+          {isAddInfluencerModalOpen && (
+            <div className="fixed inset-0 z-50 bg-black/60 backdrop-blur-xs flex items-center justify-center p-4">
+              <div className="bg-white rounded-2xl max-w-lg w-full p-6 space-y-4 max-h-[90vh] overflow-y-auto">
+                <div className="flex items-center justify-between border-b border-stone-200 pb-3">
+                  <h3 className="font-bold text-stone-900 text-base flex items-center gap-2">
+                    <Gift className="w-5 h-5 text-rose-600" />
+                    <span>إضافة مؤثرة / صانعة محتوى جديدة للإهداءات</span>
+                  </h3>
+                  <button
+                    type="button"
+                    onClick={() => setIsAddInfluencerModalOpen(false)}
+                    className="text-stone-400 hover:text-stone-600 p-1"
+                  >
+                    ✕
+                  </button>
+                </div>
+
+                <div className="space-y-3 text-xs">
+                  <div className="grid grid-cols-2 gap-3">
+                    <div>
+                      <label className="block font-bold text-stone-700 mb-1">اسم الأم أو القناة:</label>
+                      <input
+                        type="text"
+                        value={newInfName}
+                        onChange={(e) => setNewInfName(e.target.value)}
+                        placeholder="مثال: ياسمين صبري (ماما ياسمين)"
+                        className="w-full p-2.5 border border-stone-300 rounded-xl"
+                      />
+                    </div>
+                    <div>
+                      <label className="block font-bold text-stone-700 mb-1">اسم المستخدم (Handle):</label>
+                      <input
+                        type="text"
+                        value={newInfHandle}
+                        onChange={(e) => setNewInfHandle(e.target.value)}
+                        placeholder="@yasmine_baby"
+                        className="w-full p-2.5 border border-stone-300 rounded-xl font-mono"
+                      />
+                    </div>
+                  </div>
+
+                  <div className="grid grid-cols-3 gap-3">
+                    <div>
+                      <label className="block font-bold text-stone-700 mb-1">المنصة:</label>
+                      <select
+                        value={newInfPlatform}
+                        onChange={(e) => setNewInfPlatform(e.target.value as any)}
+                        className="w-full p-2.5 border border-stone-300 rounded-xl"
+                      >
+                        <option value="instagram">Instagram</option>
+                        <option value="tiktok">TikTok</option>
+                        <option value="facebook">Facebook</option>
+                      </select>
+                    </div>
+                    <div>
+                      <label className="block font-bold text-stone-700 mb-1">عدد المتابعين:</label>
+                      <input
+                        type="text"
+                        value={newInfFollowers}
+                        onChange={(e) => setNewInfFollowers(e.target.value)}
+                        placeholder="مثال: 150K"
+                        className="w-full p-2.5 border border-stone-300 rounded-xl"
+                      />
+                    </div>
+                    <div>
+                      <label className="block font-bold text-stone-700 mb-1">المدينة / المنطقة:</label>
+                      <input
+                        type="text"
+                        value={newInfLocation}
+                        onChange={(e) => setNewInfLocation(e.target.value)}
+                        placeholder="القاهرة الجديدة"
+                        className="w-full p-2.5 border border-stone-300 rounded-xl"
+                      />
+                    </div>
+                  </div>
+
+                  <div className="p-3 bg-stone-50 rounded-xl border border-stone-200 space-y-2">
+                    <span className="font-bold text-stone-800 block">بيانات الطفل/الأطفال لتخصيص الملابس:</span>
+                    <div className="grid grid-cols-2 gap-2">
+                      <input
+                        type="text"
+                        value={newInfChildName}
+                        onChange={(e) => setNewInfChildName(e.target.value)}
+                        placeholder="اسم الطفل (مثال: مالك)"
+                        className="p-2 border border-stone-300 rounded-lg bg-white"
+                      />
+                      <input
+                        type="text"
+                        value={newInfChildAge}
+                        onChange={(e) => setNewInfChildAge(e.target.value)}
+                        placeholder="العمر (مثال: 6 شهور)"
+                        className="p-2 border border-stone-300 rounded-lg bg-white"
+                      />
+                    </div>
+                  </div>
+
+                  <div>
+                    <label className="block font-bold text-stone-700 mb-1">تفاصيل ومواصفات طقم الهدية المخصصة:</label>
+                    <textarea
+                      rows={2}
+                      value={newInfCustomNotes}
+                      onChange={(e) => setNewInfCustomNotes(e.target.value)}
+                      placeholder="مثال: سالوبيت قطن مصري ملكي مطبوع عليه اسم مالك بالخط الديواني + تيشيرت متطابق للأم"
+                      className="w-full p-2.5 border border-stone-300 rounded-xl"
+                    />
+                  </div>
+
+                  <div>
+                    <label className="block font-bold text-stone-700 mb-1">كود الخصم المخصص لمتابعيها:</label>
+                    <input
+                      type="text"
+                      value={newInfPromoCode}
+                      onChange={(e) => setNewInfPromoCode(e.target.value)}
+                      placeholder="MALEK10"
+                      className="w-full p-2.5 border border-stone-300 rounded-xl font-mono uppercase"
+                    />
+                  </div>
+                </div>
+
+                <div className="flex items-center justify-end gap-2 border-t border-stone-200 pt-3">
+                  <button
+                    type="button"
+                    onClick={() => setIsAddInfluencerModalOpen(false)}
+                    className="px-4 py-2 text-stone-600 hover:text-stone-800 text-xs font-bold"
+                  >
+                    إلغاء
+                  </button>
+                  <button
+                    type="button"
+                    onClick={() => {
+                      if (!newInfName || !newInfHandle) return;
+                      const newInf: InfluencerPartner = {
+                        id: `inf-${Date.now()}`,
+                        name: newInfName,
+                        handle: newInfHandle,
+                        platform: newInfPlatform,
+                        followers: newInfFollowers || '50K',
+                        location: newInfLocation || 'القاهرة',
+                        momName: newInfMomName || newInfName.split(' ')[0],
+                        children: [
+                          {
+                            name: newInfChildName || 'البيبي',
+                            age: newInfChildAge || 'سنة',
+                            gender: 'boy',
+                          },
+                        ],
+                        customOutfitNotes: newInfCustomNotes || 'طقم سالوبيت قطن مصري مخصص بالاسم',
+                        status: 'identified',
+                        promoCode: newInfPromoCode || 'VIP10',
+                        ordersDriven: 0,
+                        totalSalesValue: 0,
+                        aiPitchDraft: `أهلاً يا جميلة 🌸 بنتابع يومياتك الرقيقة وحابين نهديكِ ونهدي ${newInfChildName || 'طفلك'} طقم قطن مصري 100% أنقى درجة مطبوع باسمه خصيصاً في استوديو 2BabyPrint لحماية بشرته من الحساسية وتخليد أجمل صوره. يسعدنا استقبال مقاساتكم!`,
+                        lastContactDate: new Date().toISOString().split('T')[0],
+                      };
+                      handleUpdateInfluencers([newInf, ...influencers]);
+                      setIsAddInfluencerModalOpen(false);
+                      setNewInfName('');
+                      setNewInfHandle('');
+                      setNewInfChildName('');
+                      setNewInfChildAge('');
+                      setNewInfCustomNotes('');
+                      setNewInfPromoCode('');
+                    }}
+                    className="px-5 py-2 bg-stone-900 hover:bg-stone-800 text-white rounded-xl text-xs font-bold"
+                  >
+                    حفظ المؤثرة وبدء التواصل
+                  </button>
+                </div>
+              </div>
+            </div>
+          )}
+        </div>
+      )}
+
+      {/* 7. TAB 5: SOCIAL PAGES & CONTENT CALENDAR */}
+      {activeTab === 'social_pages' && (
+        <div className="space-y-6">
+          {/* Linked Social Pages Overview */}
+          <div className="bg-white p-5 rounded-2xl border border-stone-200 shadow-2xs space-y-4">
+            <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-3">
+              <div>
+                <h3 className="font-bold text-stone-900 text-sm flex items-center gap-2">
+                  <Share2 className="w-4 h-4 text-sky-600" />
+                  <span>الصفحات والحسابات الرسمية المرتبطة بمتجر 2BabyPrint</span>
+                </h3>
+                <p className="text-xs text-stone-500 mt-0.5">
+                  إدارة الصلاحيات الكاملة لمحتوى الصفحات، الجدولة التلقائية، وتحليل تفاعل الجمهور
+                </p>
+              </div>
+
+              <div className="flex items-center gap-2">
+                <button
+                  type="button"
+                  onClick={() => setIsAddPostModalOpen(true)}
+                  className="px-4 py-2 bg-stone-900 hover:bg-stone-800 text-white rounded-xl text-xs font-bold flex items-center gap-1.5 cursor-pointer shrink-0"
+                >
+                  <Plus className="w-4 h-4 text-amber-400" />
+                  <span>جدولة منشور جديد</span>
+                </button>
+              </div>
+            </div>
+
+            <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-3">
+              <div className="p-3.5 rounded-xl border border-pink-200 bg-pink-50/50 space-y-1">
+                <div className="flex items-center justify-between">
+                  <span className="font-bold text-pink-950 text-xs">Instagram</span>
+                  <span className="text-[10px] bg-emerald-100 text-emerald-800 font-bold px-1.5 py-0.5 rounded">متصل ✅</span>
+                </div>
+                <div className="font-mono text-xs text-stone-700">@2babyprint_eg</div>
+                <div className="text-[11px] text-stone-500">42.5K متابع • معدل تفاعل 6.2%</div>
+              </div>
+
+              <div className="p-3.5 rounded-xl border border-stone-300 bg-stone-50 space-y-1">
+                <div className="flex items-center justify-between">
+                  <span className="font-bold text-stone-950 text-xs">TikTok</span>
+                  <span className="text-[10px] bg-emerald-100 text-emerald-800 font-bold px-1.5 py-0.5 rounded">متصل ✅</span>
+                </div>
+                <div className="font-mono text-xs text-stone-700">@2babyprint_cairo</div>
+                <div className="text-[11px] text-stone-500">88.4K متابع • 1.2M مشاهدة شهرية</div>
+              </div>
+
+              <div className="p-3.5 rounded-xl border border-blue-200 bg-blue-50/50 space-y-1">
+                <div className="flex items-center justify-between">
+                  <span className="font-bold text-blue-950 text-xs">Facebook Page</span>
+                  <span className="text-[10px] bg-emerald-100 text-emerald-800 font-bold px-1.5 py-0.5 rounded">متصل ✅</span>
+                </div>
+                <div className="font-mono text-xs text-stone-700">2BabyPrint Egypt</div>
+                <div className="text-[11px] text-stone-500">65K معجب • رد فوري على الرسائل</div>
+              </div>
+
+              <div className="p-3.5 rounded-xl border border-emerald-200 bg-emerald-50/50 space-y-1">
+                <div className="flex items-center justify-between">
+                  <span className="font-bold text-emerald-950 text-xs">قناة واتساب الإدارة</span>
+                  <span className="text-[10px] bg-emerald-100 text-emerald-800 font-bold px-1.5 py-0.5 rounded">نشط 🟢</span>
+                </div>
+                <div className="font-mono text-xs text-stone-700">01019998877</div>
+                <div className="text-[11px] text-stone-500">إشعارات المطبعة والطلبات الفورية</div>
+              </div>
+            </div>
+          </div>
+
+          {/* Posts Schedule Queue */}
+          <div className="space-y-4">
+            <h4 className="font-bold text-stone-900 text-sm flex items-center gap-2">
+              <Calendar className="w-4 h-4 text-amber-600" />
+              <span>جدول النشر التفاعلي والمحتوى الجاهز:</span>
+            </h4>
+
+            <div className="grid grid-cols-1 md:grid-cols-3 gap-4">
+              {postSchedules.map((post) => (
+                <div
+                  key={post.id}
+                  className="bg-white p-5 rounded-2xl border border-stone-200 flex flex-col justify-between space-y-4 shadow-2xs hover:border-amber-400 transition-all"
+                >
+                  <div className="space-y-3">
+                    <div className="flex items-center justify-between">
+                      <span className="text-xs font-bold px-2 py-0.5 rounded-md bg-stone-100 text-stone-700">
+                        {post.platform === 'instagram' ? '📸 Instagram' : post.platform === 'tiktok' ? '🎵 TikTok' : '📘 Facebook'}
+                      </span>
+                      <span
+                        className={`text-[10px] font-bold px-2 py-0.5 rounded-full ${
+                          post.status === 'published'
+                            ? 'bg-emerald-100 text-emerald-800'
+                            : post.status === 'scheduled'
+                            ? 'bg-amber-100 text-amber-800'
+                            : 'bg-stone-100 text-stone-700'
+                        }`}
+                      >
+                        {post.status === 'published' ? 'منشور بالفعل' : post.status === 'scheduled' ? 'مجدول للنشر' : 'مسودة'}
+                      </span>
+                    </div>
+
+                    <h5 className="font-bold text-stone-900 text-xs leading-snug">{post.title}</h5>
+
+                    <p className="text-xs text-stone-600 line-clamp-4 leading-relaxed whitespace-pre-line font-sans bg-stone-50 p-3 rounded-xl border border-stone-200/60">
+                      {post.content}
+                    </p>
+
+                    <div className="flex items-center gap-1.5 text-[11px] text-stone-500 font-mono">
+                      <Clock className="w-3.5 h-3.5 text-stone-400" />
+                      <span>{post.scheduledTime}</span>
+                    </div>
+                  </div>
+
+                  <div className="border-t border-stone-100 pt-3 flex items-center justify-between">
+                    <button
+                      type="button"
+                      onClick={() => {
+                        navigator.clipboard.writeText(post.content);
+                        setCopiedId(post.id);
+                        setTimeout(() => setCopiedId(null), 2500);
+                      }}
+                      className="text-xs font-bold text-stone-700 hover:text-stone-950 flex items-center gap-1 cursor-pointer"
+                    >
+                      {copiedId === post.id ? (
+                        <>
+                          <Check className="w-3.5 h-3.5 text-emerald-600" />
+                          <span className="text-emerald-600">تم النسخ!</span>
+                        </>
+                      ) : (
+                        <>
+                          <Copy className="w-3.5 h-3.5" />
+                          <span>نسخ الكابشن</span>
+                        </>
+                      )}
+                    </button>
+
+                    <button
+                      type="button"
+                      onClick={() => {
+                        const next = post.status === 'published' ? 'scheduled' : 'published';
+                        handleUpdatePosts(postSchedules.map((p) => (p.id === post.id ? { ...p, status: next } : p)));
+                      }}
+                      className="text-xs text-amber-700 hover:text-amber-900 font-bold cursor-pointer"
+                    >
+                      {post.status === 'published' ? 'إعادة للجدولة' : 'تأكيد النشر الآن'}
+                    </button>
+                  </div>
+                </div>
+              ))}
+            </div>
+          </div>
+
+          {/* Modal: Add Scheduled Post */}
+          {isAddPostModalOpen && (
+            <div className="fixed inset-0 z-50 bg-black/60 backdrop-blur-xs flex items-center justify-center p-4">
+              <div className="bg-white rounded-2xl max-w-lg w-full p-6 space-y-4">
+                <div className="flex items-center justify-between border-b border-stone-200 pb-3">
+                  <h3 className="font-bold text-stone-900 text-base flex items-center gap-2">
+                    <Calendar className="w-5 h-5 text-amber-600" />
+                    <span>جدولة منشور جديد على السوشيال ميديا</span>
+                  </h3>
+                  <button
+                    type="button"
+                    onClick={() => setIsAddPostModalOpen(false)}
+                    className="text-stone-400 hover:text-stone-600 p-1"
+                  >
+                    ✕
+                  </button>
+                </div>
+
+                <div className="space-y-3 text-xs">
+                  <div className="grid grid-cols-2 gap-3">
+                    <div>
+                      <label className="block font-bold text-stone-700 mb-1">المنصة المستهدفة:</label>
+                      <select
+                        value={newPostPlatform}
+                        onChange={(e) => setNewPostPlatform(e.target.value as any)}
+                        className="w-full p-2.5 border border-stone-300 rounded-xl"
+                      >
+                        <option value="instagram">Instagram</option>
+                        <option value="tiktok">TikTok</option>
+                        <option value="facebook">Facebook</option>
+                      </select>
+                    </div>
+                    <div>
+                      <label className="block font-bold text-stone-700 mb-1">نوع المحتوى:</label>
+                      <select
+                        value={newPostMediaType}
+                        onChange={(e) => setNewPostMediaType(e.target.value as any)}
+                        className="w-full p-2.5 border border-stone-300 rounded-xl"
+                      >
+                        <option value="reel">فيديو ريلز (Reel)</option>
+                        <option value="image">صورة فردية (Post)</option>
+                        <option value="carousel">ألبوم صور (Carousel)</option>
+                        <option value="story">ستوري (Story)</option>
+                      </select>
+                    </div>
+                  </div>
+
+                  <div>
+                    <label className="block font-bold text-stone-700 mb-1">عنوان الفكرة / المنشور:</label>
+                    <input
+                      type="text"
+                      value={newPostTitle}
+                      onChange={(e) => setNewPostTitle(e.target.value)}
+                      placeholder="مثال: ريلز استوديو التصميم وتجربة الأم"
+                      className="w-full p-2.5 border border-stone-300 rounded-xl"
+                    />
+                  </div>
+
+                  <div>
+                    <label className="block font-bold text-stone-700 mb-1">نص المنشور والهاشتاجات (الكابشن):</label>
+                    <textarea
+                      rows={4}
+                      value={newPostContent}
+                      onChange={(e) => setNewPostContent(e.target.value)}
+                      placeholder="اكتبي محتوى المنشور الجذاب والهاشتاجات ورابط المتجر..."
+                      className="w-full p-2.5 border border-stone-300 rounded-xl font-sans"
+                    />
+                  </div>
+
+                  <div>
+                    <label className="block font-bold text-stone-700 mb-1">موعد النشر المقترح:</label>
+                    <input
+                      type="text"
+                      value={newPostTime}
+                      onChange={(e) => setNewPostTime(e.target.value)}
+                      placeholder="اليوم، 8:00 مساءً"
+                      className="w-full p-2.5 border border-stone-300 rounded-xl"
+                    />
+                  </div>
+                </div>
+
+                <div className="flex items-center justify-end gap-2 border-t border-stone-200 pt-3">
+                  <button
+                    type="button"
+                    onClick={() => setIsAddPostModalOpen(false)}
+                    className="px-4 py-2 text-stone-600 hover:text-stone-800 text-xs font-bold"
+                  >
+                    إلغاء
+                  </button>
+                  <button
+                    type="button"
+                    onClick={() => {
+                      if (!newPostTitle || !newPostContent) return;
+                      const newP: SocialPostSchedule = {
+                        id: `post-${Date.now()}`,
+                        platform: newPostPlatform,
+                        title: newPostTitle,
+                        content: newPostContent,
+                        scheduledTime: newPostTime,
+                        status: 'scheduled',
+                        mediaType: newPostMediaType,
+                        mediaUrl: '/src/assets/images/hero_baby_apparel_1790519873737.jpg',
+                        targetLink: 'https://2babyprint.eg/#catalog',
+                      };
+                      handleUpdatePosts([newP, ...postSchedules]);
+                      setIsAddPostModalOpen(false);
+                      setNewPostTitle('');
+                      setNewPostContent('');
+                    }}
+                    className="px-5 py-2 bg-stone-900 hover:bg-stone-800 text-white rounded-xl text-xs font-bold"
+                  >
+                    حفظ وجدولة المنشور
+                  </button>
+                </div>
+              </div>
+            </div>
+          )}
+        </div>
+      )}
+
+      {/* 8. TAB 6: CONTINUOUS AI CAMPAIGN LEARNING ENGINE & MARKET OPTIMIZER */}
+      {activeTab === 'learning_engine' && (
+        <div className="space-y-6">
+          <div className="bg-gradient-to-br from-stone-900 via-stone-850 to-stone-900 text-white p-6 rounded-2xl shadow-sm border border-stone-800 space-y-4">
+            <div className="flex items-center gap-2 text-xs font-semibold text-amber-400">
+              <Zap className="w-4 h-4" />
+              <span>محرك التعلّم الذاتي المستمر للحملات وتحليل سلوك السوق (Continuous AI Engine)</span>
+            </div>
+            <h3 className="text-lg sm:text-xl font-black text-white">
+              التعلم التلقائي من نتائج الإعلانات السابقة وإدارة السوق وفق الأداء الفعلي
+            </h3>
+            <p className="text-xs text-stone-300 max-w-3xl leading-relaxed">
+              يقوم هذا النظام بتحليل نسب النقر (CTR)، والعائد على الإنفاق (ROAS)، ومتوسط قيمة سلة التسوق للمناطق الجغرافية في القاهرة الكبرى، لتعديل الرسائل الإعلانية وترشيح استراتيجيات الإنتاج والدعاية تلقائياً.
+            </p>
+          </div>
+
+          <div className="grid grid-cols-1 md:grid-cols-3 gap-4">
+            <div className="bg-white p-5 rounded-2xl border border-stone-200 shadow-2xs space-y-3">
+              <div className="flex items-center gap-2 text-xs font-bold text-amber-800">
+                <BarChart3 className="w-4 h-4 text-amber-600" />
+                <span>أعلى الشرائح تحويلاً للشراء</span>
+              </div>
+              <div className="space-y-2 text-xs text-stone-700">
+                <div className="p-3 bg-amber-50/60 rounded-xl border border-amber-200/60">
+                  <div className="font-bold text-stone-900">أمهات حوامل يجهزن للسبوع (الأسبوع 32-36)</div>
+                  <div className="text-[11px] text-stone-600 mt-1">
+                    يحققن عائد إعلاني 5.8x ROAS. الأكثر طلباً: سالوبيتات قطن بيضاء مع التاج الملكي واسم البيبي.
+                  </div>
+                </div>
+                <div className="p-3 bg-stone-50 rounded-xl border border-stone-200">
+                  <div className="font-bold text-stone-900">هدايا الخالات والعمات وأعياد الميلاد الأولى</div>
+                  <div className="text-[11px] text-stone-600 mt-1">
+                    يحققن أعلى سلة مشتريات (طقم أطفال + تيشيرت مطابق للأم والأب).
+                  </div>
+                </div>
+              </div>
+            </div>
+
+            <div className="bg-white p-5 rounded-2xl border border-stone-200 shadow-2xs space-y-3">
+              <div className="flex items-center gap-2 text-xs font-bold text-purple-800">
+                <Film className="w-4 h-4 text-purple-600" />
+                <span>أفضل زوايا وتكتيكات المحتوى الإعلاني</span>
+              </div>
+              <div className="space-y-2 text-xs text-stone-700">
+                <div className="p-3 bg-purple-50/60 rounded-xl border border-purple-200/60">
+                  <div className="font-bold text-stone-900">فيديو كواليس طباعة الـ DTF ولمس القماش</div>
+                  <div className="text-[11px] text-stone-600 mt-1">
+                    يقلل معدل الارتداد بنسبة 42%، ويزيد ثقة العميل بأن الأحبار مائية ناعمة لا تؤذي جلد الرضيع.
+                  </div>
+                </div>
+                <div className="p-3 bg-stone-50 rounded-xl border border-stone-200">
+                  <div className="font-bold text-stone-900">تجربة الأم أثناء كتابة الاسم بالاستوديو الحي</div>
+                  <div className="text-[11px] text-stone-600 mt-1">
+                    العميل يشعر أنه الصانع المباشر لقطعة طفله مما يرفع قرار الإتمام بنسبة 35%.
+                  </div>
+                </div>
+              </div>
+            </div>
+
+            <div className="bg-white p-5 rounded-2xl border border-stone-200 shadow-2xs space-y-3">
+              <div className="flex items-center gap-2 text-xs font-bold text-emerald-800">
+                <Truck className="w-4 h-4 text-emerald-600" />
+                <span>سلوكيات التوصيل والتحويل السريع</span>
+              </div>
+              <div className="space-y-2 text-xs text-stone-700">
+                <div className="p-3 bg-emerald-50/60 rounded-xl border border-emerald-200/60">
+                  <div className="font-bold text-stone-900">خيار التوصيل الفوري (أوبر سكوتر)</div>
+                  <div className="text-[11px] text-stone-600 mt-1">
+                    28% من طلبات عطلة نهاية الأسبوع تختار التوصيل المستعجل لحضور مناسبات سبوع أو جلسات تصوير فجائية.
+                  </div>
+                </div>
+                <div className="p-3 bg-stone-50 rounded-xl border border-stone-200">
+                  <div className="font-bold text-stone-900">الدفع عبر إنستاباي والمحافظ</div>
+                  <div className="text-[11px] text-stone-600 mt-1">
+                    رفع سرعة إرسال أوامر الطباعة للمطبعة من 4 ساعات إلى أقل من 15 دقيقة بعد رفع إيصال التحويل.
+                  </div>
+                </div>
+              </div>
+            </div>
+          </div>
+
+          {/* Real-time Recommendations from AI */}
+          <div className="bg-white p-6 rounded-2xl border border-stone-200 shadow-2xs space-y-4">
+            <h4 className="font-bold text-stone-900 text-sm flex items-center gap-2">
+              <Sparkles className="w-4 h-4 text-amber-500" />
+              <span>توصيات الذكاء الاصطناعي التشغيلية للأسبوع القادم:</span>
+            </h4>
+
+            <div className="grid grid-cols-1 sm:grid-cols-2 gap-3 text-xs">
+              <div className="p-4 rounded-xl border border-stone-200 bg-stone-50/80 space-y-2">
+                <div className="flex items-center justify-between">
+                  <span className="font-bold text-stone-900">1. رفع ميزانية إعلانات السبوع بنسبة 20%</span>
+                  <span className="text-[10px] bg-amber-100 text-amber-900 font-bold px-2 py-0.5 rounded">أولوية عالية</span>
+                </div>
+                <p className="text-stone-600 leading-relaxed">
+                  تظهر بيانات السوق ارتفاعاً في معدلات المواليد في الربع الحالي بالقاهرة، مما يجعل زيادة ميزانية حملة السبوع تعود بـ ROAS يقارب 5.2x.
+                </p>
+              </div>
+
+              <div className="p-4 rounded-xl border border-stone-200 bg-stone-50/80 space-y-2">
+                <div className="flex items-center justify-between">
+                  <span className="font-bold text-stone-900">2. إرسال 5 باقات إهداء إضافية لصانعات محتوى التيك توك</span>
+                  <span className="text-[10px] bg-purple-100 text-purple-900 font-bold px-2 py-0.5 rounded">توسع وانتشار</span>
+                </div>
+                <p className="text-stone-600 leading-relaxed">
+                  فيديوهات فتح الطرد (Unboxing) لملابس الأطفال بأسماء الصغار تحقق تفاعلاً طبيعياً أعلى بـ 3 أضعاف من الإعلانات الصامتة.
+                </p>
+              </div>
+            </div>
+          </div>
+        </div>
+      )}
     </div>
   );
 };
+

@@ -215,7 +215,7 @@ export const Header: React.FC<HeaderProps> = ({
           <button
             type="button"
             onClick={onOpenCart}
-            className="relative p-2.5 rounded-xl border border-stone-200 hover:border-amber-400 hover:bg-amber-50/50 text-stone-800 transition-colors"
+            className="relative p-2.5 rounded-xl border border-stone-200 hover:border-amber-400 hover:bg-amber-50/50 text-stone-800 transition-colors cursor-pointer"
             title={t.cart.title}
           >
             <ShoppingBag className="w-5 h-5" />
@@ -224,20 +224,6 @@ export const Header: React.FC<HeaderProps> = ({
                 {totalItemCount}
               </span>
             )}
-          </button>
-
-          {/* Discreet Staff Login Padlock (Restricted to Management/Staff) */}
-          <button
-            type="button"
-            onClick={onOpenStaffLogin}
-            className={`p-2 rounded-xl border transition-colors ${
-              isStaffAuthenticated
-                ? 'border-amber-400 bg-amber-50 text-amber-900'
-                : 'border-transparent text-stone-400 hover:text-stone-700 hover:bg-stone-100'
-            }`}
-            title={lang === 'ar' ? 'بوابة دخول الإدارة والمطبعة' : 'Staff Access'}
-          >
-            <Lock className="w-4 h-4" />
           </button>
         </div>
       </header>
@@ -294,19 +280,6 @@ export const Header: React.FC<HeaderProps> = ({
             >
               <Sparkles className="w-4 h-4" />
               <span>{lang === 'ar' ? 'اختر قطعة لتصميمها' : 'Pick a Garment to Design'}</span>
-            </button>
-
-            {/* Staff portal option in mobile drawer */}
-            <button
-              type="button"
-              onClick={() => {
-                setIsMobileMenuOpen(false);
-                onOpenStaffLogin();
-              }}
-              className="w-full text-right px-3 py-2 text-stone-500 hover:text-stone-800 rounded-xl text-[11px] flex items-center gap-1.5 pt-2 border-t border-stone-100 mt-2"
-            >
-              <Lock className="w-3.5 h-3.5 text-stone-400" />
-              <span>{lang === 'ar' ? 'بوابة الإدارة وفريق العمل' : 'Staff Portal Access'}</span>
             </button>
           </div>
         </div>

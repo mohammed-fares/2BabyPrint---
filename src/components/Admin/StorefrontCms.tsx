@@ -1452,6 +1452,102 @@ export const StorefrontCms: React.FC<StorefrontCmsProps> = ({
               </div>
             </div>
           </div>
+
+          {/* Section 2: Dedicated Print House & Customer Support Integrations */}
+          <div className="pt-5 border-t border-stone-200">
+            <h5 className="font-bold text-xs text-stone-900 mb-1 flex items-center gap-1.5">
+              <span className="w-2 h-2 rounded-full bg-emerald-500" />
+              <span>ربط قنوات المطبعة وفريق العمل (WhatsApp & Telegram):</span>
+            </h5>
+            <p className="text-[11px] text-stone-500 mb-3">
+              استقبال الأوردر بجميع تفاصيله (نوع الصنف، التصميم، الروابط وملف الطباعة 300 DPI) مباشرة على حسابات المطبعة
+            </p>
+
+            <div className="grid grid-cols-1 sm:grid-cols-3 gap-3 text-xs">
+              <div>
+                <label className="text-stone-700 font-bold block mb-1">رقم واتساب المطبعة (لتلقي الأوردر والتصميم):</label>
+                <input
+                  type="text"
+                  value={settingsForm.printerWhatsapp || ''}
+                  onChange={(e) => setSettingsForm({ ...settingsForm, printerWhatsapp: e.target.value })}
+                  placeholder="01019998877"
+                  className="w-full px-3 py-2 bg-stone-50 border border-stone-300 rounded-xl font-mono text-xs text-stone-900"
+                  dir="ltr"
+                />
+              </div>
+
+              <div>
+                <label className="text-stone-700 font-bold block mb-1">حساب تليجرام المطبعة (Telegram Channel/User):</label>
+                <input
+                  type="text"
+                  value={settingsForm.printerTelegram || ''}
+                  onChange={(e) => setSettingsForm({ ...settingsForm, printerTelegram: e.target.value })}
+                  placeholder="@BabyPrintProduction"
+                  className="w-full px-3 py-2 bg-stone-50 border border-stone-300 rounded-xl font-mono text-xs text-stone-900"
+                  dir="ltr"
+                />
+              </div>
+
+              <div>
+                <label className="text-stone-700 font-bold block mb-1">واتساب المتحدث الذكي وخدمة العملاء:</label>
+                <input
+                  type="text"
+                  value={settingsForm.supportWhatsapp || ''}
+                  onChange={(e) => setSettingsForm({ ...settingsForm, supportWhatsapp: e.target.value })}
+                  placeholder="01099887766"
+                  className="w-full px-3 py-2 bg-stone-50 border border-stone-300 rounded-xl font-mono text-xs text-stone-900"
+                  dir="ltr"
+                />
+              </div>
+            </div>
+          </div>
+
+          {/* Section 3: Uber Scooter / Talabat Go Express Shipping */}
+          <div className="pt-5 border-t border-stone-200">
+            <div className="flex items-center justify-between mb-2">
+              <div>
+                <h5 className="font-bold text-xs text-stone-900 flex items-center gap-1.5">
+                  <span className="w-2 h-2 rounded-full bg-amber-500" />
+                  <span>خدمة التوصيل الفوري السريع اليوم (أوبر سكوتر / مندوب خاص Express):</span>
+                </h5>
+                <p className="text-[11px] text-stone-500 mt-0.5">
+                  يتيح للعميل استلام الطلب في نفس اليوم بتحمل تكلفة النقل الفورية، أو الانتظار للشحن القياسي
+                </p>
+              </div>
+              <label className="relative inline-flex items-center cursor-pointer">
+                <input
+                  type="checkbox"
+                  checked={settingsForm.enableExpressDelivery !== false}
+                  onChange={(e) => setSettingsForm({ ...settingsForm, enableExpressDelivery: e.target.checked })}
+                  className="sr-only peer"
+                />
+                <div className="w-9 h-5 bg-stone-300 peer-focus:outline-none rounded-full peer peer-checked:after:translate-x-full peer-checked:after:border-white after:content-[''] after:absolute after:top-[2px] after:left-[2px] after:bg-white after:border-stone-300 after:border after:rounded-full after:h-4 after:w-4 after:transition-all peer-checked:bg-amber-500"></div>
+              </label>
+            </div>
+
+            {settingsForm.enableExpressDelivery !== false && (
+              <div className="grid grid-cols-1 sm:grid-cols-2 gap-3 text-xs bg-amber-50/50 p-3 rounded-xl border border-amber-200">
+                <div>
+                  <label className="text-stone-700 font-bold block mb-1">تكلفة شحن أوبر سكوتر الفوري (ج.م):</label>
+                  <input
+                    type="number"
+                    value={settingsForm.expressDeliveryFee || 120}
+                    onChange={(e) => setSettingsForm({ ...settingsForm, expressDeliveryFee: Number(e.target.value) })}
+                    className="w-full px-3 py-2 bg-white border border-stone-300 rounded-xl font-mono text-xs"
+                  />
+                </div>
+                <div>
+                  <label className="text-stone-700 font-bold block mb-1">نص خيار الشحن الفوري للعميل:</label>
+                  <input
+                    type="text"
+                    value={settingsForm.expressDeliveryLabel || 'شحن فوري سريع - أوبر سكوتر / مندوب خاص اليوم'}
+                    onChange={(e) => setSettingsForm({ ...settingsForm, expressDeliveryLabel: e.target.value })}
+                    className="w-full px-3 py-2 bg-white border border-stone-300 rounded-xl text-xs"
+                  />
+                </div>
+              </div>
+            )}
+          </div>
         </div>
       )}
 

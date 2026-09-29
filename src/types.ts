@@ -5,6 +5,7 @@ export interface ProductColor {
   name: string;
   hex: string;
   borderClass?: string;
+  silhouetteUrl?: string;
 }
 
 export type GarmentType =
@@ -146,6 +147,77 @@ export type OrderStatus =
   | 'delivered' // تم التوصيل للعميل بنجاح
   | 'cancelled'; // تم الإلغاء
 
+export type ShippingType = 'standard' | 'express_uber';
+
+export interface HeroSlide {
+  id: string;
+  badge: string;
+  badgeEn?: string;
+  title: string;
+  titleEn?: string;
+  subtitle: string;
+  subtitleEn?: string;
+  ctaText: string;
+  ctaTextEn?: string;
+  ctaLink?: 'catalog' | 'templates' | 'studio';
+  imageUrl: string;
+  captionTitle?: string;
+  captionSubtitle?: string;
+}
+
+export type InfluencerStage =
+  | 'identified'
+  | 'contacted'
+  | 'details_confirmed'
+  | 'gift_in_production'
+  | 'sample_sent'
+  | 'delivered'
+  | 'reel_published'
+  | 'content_published'
+  | 'partnership_active'
+  | 'active_ambassador';
+
+export interface InfluencerPartner {
+  id: string;
+  name: string;
+  handle: string;
+  platform: 'instagram' | 'tiktok' | 'youtube' | 'facebook';
+  followers?: string;
+  followersCount?: string;
+  phone?: string;
+  location?: string;
+  momName?: string;
+  children?: {
+    name: string;
+    age: string;
+    gender: 'boy' | 'girl' | 'unisex';
+    favoriteColor?: string;
+  }[];
+  childrenNames?: string[];
+  assignedProducts?: string[];
+  customOutfitNotes?: string;
+  status: InfluencerStage;
+  promoCode?: string;
+  couponCode?: string;
+  ordersDriven?: number;
+  totalSalesValue?: number;
+  giftOrderDetails?: string;
+  notes?: string;
+  aiPitchDraft?: string;
+  lastContactDate?: string;
+}
+
+export interface AdminNotification {
+  id: string;
+  title: string;
+  message: string;
+  date: string;
+  type: 'order' | 'payment_verified' | 'urgent' | 'system';
+  isRead: boolean;
+  orderNumber?: string;
+  priority: 'normal' | 'high' | 'urgent';
+}
+
 export interface OrderDetails {
   orderNumber: string;
   date: string;
@@ -163,6 +235,16 @@ export interface OrderDetails {
   total: number;
   status: OrderStatus;
   instapayReference?: string;
+  shippingType?: ShippingType;
+  receiptImageUrl?: string;
+  receiptVerified?: boolean;
+  receiptVerificationData?: {
+    refNumber?: string;
+    amount?: number;
+    date?: string;
+    senderName?: string;
+    confidence?: string;
+  };
   notes?: string;
   updatedAt?: string;
 }
@@ -199,7 +281,19 @@ export interface StoreSettings {
   freeShippingThreshold: number;
   shippingFee: number;
   
-  // Hero Section CMS
+  // Dedicated Print House & Customer Support Integrations
+  printerWhatsapp?: string;
+  printerTelegram?: string;
+  supportWhatsapp?: string;
+
+  // Uber Scooter / Talabat Express Delivery
+  enableExpressDelivery?: boolean;
+  expressDeliveryFee?: number;
+  expressDeliveryLabel?: string;
+  expressDeliveryNotice?: string;
+
+  // Hero Section Carousel / Slides CMS
+  heroSlides?: HeroSlide[];
   heroBadge?: string;
   heroTitle: string;
   heroSubtitle: string;
@@ -374,4 +468,21 @@ export interface SocialCampaign {
   };
   aiNotes?: string;
   createdAt: string;
+}
+
+export interface SocialPostSchedule {
+  id: string;
+  platform: SocialPlatform;
+  title: string;
+  content: string;
+  scheduledTime: string;
+  status: 'draft' | 'scheduled' | 'published';
+  mediaType: 'image' | 'reel' | 'story' | 'carousel';
+  mediaUrl: string;
+  targetLink: string;
+  engagement?: {
+    likes: number;
+    shares: number;
+    comments: number;
+  };
 }
