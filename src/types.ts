@@ -457,6 +457,23 @@ export interface SocialCampaign {
       voiceover: string;
       soundTrackRecommendation: string;
     };
+    soundEffects?: {
+      effectName: string;
+      timing: string;
+      description: string;
+      audioType: 'baby_giggle' | 'chime' | 'typewriter' | 'press' | 'lullaby';
+    }[];
+    targetPageKey?: 'hero' | 'studio' | 'catalog' | 'templates' | 'express_checkout' | 'product';
+    targetPageUrl?: string;
+    utmParams?: {
+      source: string;
+      medium: string;
+      campaign: string;
+      content?: string;
+    };
+    aspectRatio?: '9:16' | '1:1' | '16:9';
+    visualCustomName?: string;
+    marketingAngle?: string;
   };
   metrics: {
     impressions: number;

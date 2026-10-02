@@ -31,6 +31,13 @@ export interface GeneratedCampaignData {
     voiceover: string;
     soundTrackRecommendation: string;
   };
+  soundEffects?: {
+    effectName: string;
+    timing: string;
+    description: string;
+    audioType: 'baby_giggle' | 'chime' | 'typewriter' | 'press' | 'lullaby';
+  }[];
+  imagePrompt?: string;
   recommendedDailyBudget: number; // in EGP
   predictedMetrics: {
     estimatedReach: string;
@@ -401,6 +408,33 @@ export async function generateAiCampaign(
               predictedRoas: 4.5,
               recommendedPlacement: `${request.platform} Reels & In-Feed Ads`,
             },
+            soundEffects: [
+              {
+                effectName: 'ضحكة طفل لطيفة في بداية الفيديو',
+                timing: '0 - 2 ثوانٍ',
+                description: 'تجذب انتباه الأمهات في أول ثانيتين وتزيد معدل المشاهدة الكاملة',
+                audioType: 'baby_giggle',
+              },
+              {
+                effectName: 'صوت نقرات كتابة اسم الطفل',
+                timing: '3 - 6 ثوانٍ',
+                description: 'صوت بوب أب لطيف يواكب كتابة الاسم واختيار الخط بالاستوديو',
+                audioType: 'typewriter',
+              },
+              {
+                effectName: 'صوت مكبس الطباعة الرقمية DTF',
+                timing: '7 - 10 ثوانٍ',
+                description: 'صوت بخار خفيف يبرز مرحلة تثبيت الحبر المائي على القطن المصري',
+                audioType: 'press',
+              },
+              {
+                effectName: 'نغمة التأكيد الفاخرة للبراند',
+                timing: '11 - 15 ثانية',
+                description: 'رنين ناعم متناغم يحفز الأم على الضغط على رابط المتجر والطلب',
+                audioType: 'chime',
+              },
+            ],
+            imagePrompt: `صورة فوتوغرافية فائقة الجودة لـ ${request.productName || 'سالوبيت قطن مصري'} باللون الأبيض الملكي مطبوع عليه اسم الطفل بالخط العربي الذهبي، بإضاءة استوديو دافئة وخلفية قطنية طبيعية.`,
             aiMarketingTips: parsed.aiMarketingTips || goalTemplates.tips,
           };
         }
@@ -424,6 +458,33 @@ export async function generateAiCampaign(
       voiceover: goalTemplates.voiceovers[randIdx % goalTemplates.voiceovers.length],
       soundTrackRecommendation: goalTemplates.music[randIdx % goalTemplates.music.length],
     },
+    soundEffects: [
+      {
+        effectName: 'ضحكة طفل لطيفة في بداية الفيديو',
+        timing: '0 - 2 ثوانٍ',
+        description: 'تجذب انتباه الأمهات في أول ثانيتين وتزيد معدل المشاهدة الكاملة',
+        audioType: 'baby_giggle',
+      },
+      {
+        effectName: 'صوت نقرات كتابة اسم الطفل',
+        timing: '3 - 6 ثوانٍ',
+        description: 'صوت بوب أب لطيف يواكب كتابة الاسم واختيار الخط بالاستوديو',
+        audioType: 'typewriter',
+      },
+      {
+        effectName: 'صوت مكبس الطباعة الرقمية DTF',
+        timing: '7 - 10 ثوانٍ',
+        description: 'صوت بخار خفيف يبرز مرحلة تثبيت الحبر المائي على القطن المصري',
+        audioType: 'press',
+      },
+      {
+        effectName: 'نغمة التأكيد الفاخرة للبراند',
+        timing: '11 - 15 ثانية',
+        description: 'رنين ناعم متناغم يحفز الأم على الضغط على رابط المتجر والطلب',
+        audioType: 'chime',
+      },
+    ],
+    imagePrompt: `تصميم إعلاني جذاب لـ ${request.productName || 'ملابس أطفال قطنية'} من 2BabyPrint مع طباعة رقمية باسم الطفل وزوايا تصوير احترافية.`,
     recommendedDailyBudget: request.platform === 'tiktok' ? 500 : request.platform === 'google' ? 400 : 350,
     predictedMetrics: {
       estimatedReach: request.platform === 'tiktok' ? '50,000 - 90,000 مشاهدة' : '30,000 - 60,000 ظهور',

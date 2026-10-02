@@ -48,6 +48,16 @@ import {
   Zap,
   BarChart3,
   Truck,
+  Volume2,
+  Music,
+  Download,
+  QrCode,
+  Link as LinkIcon,
+  Headphones,
+  FileDown,
+  Wand2,
+  Facebook,
+  Twitter,
 } from 'lucide-react';
 import {
   generateAiCampaign,
@@ -55,6 +65,11 @@ import {
   CampaignGenerationRequest,
 } from '../../utils/aiCampaignService';
 import { INITIAL_INFLUENCERS, INITIAL_POST_SCHEDULES } from '../../data/initialInfluencers';
+import { soundEffects } from '../../utils/soundEffectsPlayer';
+import { UniversalExportModal } from './UniversalExportModal';
+import { ShortVideoReelStudio } from './ShortVideoReelStudio';
+import { AudioEffectsStudio } from './AudioEffectsStudio';
+import { InternalPageLinkBuilder } from './InternalPageLinkBuilder';
 
 interface SocialAdsHubProps {
   campaigns: SocialCampaign[];
@@ -62,7 +77,16 @@ interface SocialAdsHubProps {
   products: Product[];
 }
 
-type HubTab = 'monitor' | 'create_ai' | 'simulator' | 'influencers' | 'social_pages' | 'learning_engine';
+type HubTab =
+  | 'monitor'
+  | 'create_ai'
+  | 'short_video'
+  | 'audio_effects'
+  | 'page_links'
+  | 'influencers'
+  | 'social_pages'
+  | 'learning_engine'
+  | 'simulator';
 
 export const SocialAdsHub: React.FC<SocialAdsHubProps> = ({
   campaigns,
@@ -170,21 +194,315 @@ export const SocialAdsHub: React.FC<SocialAdsHubProps> = ({
     demographics: 'سيدات متزوجات، أمهات لأول مرة، خالات وعمات يبحثن عن هدايا مميزة',
   });
 
-  // Calculate Metrics from Campaigns
-  const totalCampaigns = campaigns.length;
-  const activeCampaigns = campaigns.filter((c) => c.status === 'active').length;
-  const totalAdSpend = campaigns.reduce((acc, c) => acc + c.totalSpent, 0);
-  const totalConversions = campaigns.reduce((acc, c) => acc + c.metrics.conversions, 0);
-  const totalImpressions = campaigns.reduce((acc, c) => acc + c.metrics.impressions, 0);
-  const totalClicks = campaigns.reduce((acc, c) => acc + c.metrics.clicks, 0);
-  const avgCtr = totalImpressions > 0 ? ((totalClicks / totalImpressions) * 100).toFixed(2) : '0';
-  const avgRoas = campaigns.length > 0 ? (campaigns.reduce((acc, c) => acc + c.metrics.roas, 0) / campaigns.length).toFixed(2) : '0';
+  // Marketing Angles & Strategies
+  const [marketingAngle, setMarketingAngle] = useState<'sebou' | 'eczema_cotton' | 'mom_designer' | 'gift_prestige' | 'express_uber'>('sebou');
 
-  // Filter campaigns
-  const filteredCampaigns = campaigns.filter((c) => {
-    if (platformFilter === 'all') return true;
-    return c.platform === platformFilter;
-  });
+  // Website Target Page & UTM Link Builder
+  const [targetPageKey, setTargetPageKey] = useState<'studio' | 'templates' | 'catalog' | 'express_checkout' | 'hero' | 'product'>('studio');
+  const [selectedTargetProductId, setSelectedTargetProductId] = useState<string>(products[0]?.id || '');
+  const [utmCampaignSlug, setUtmCampaignSlug] = useState('sebou_royal_2026');
+  const [showQrModal, setShowQrModal] = useState(false);
+
+  // Sound Effects State
+  const [draftSoundEffects, setDraftSoundEffects] = useState<
+    {
+      effectName: string;
+      timing: string;
+      description: string;
+      audioType: 'baby_giggle' | 'chime' | 'typewriter' | 'press' | 'lullaby';
+    }[]
+  >([
+    {
+      effectName: 'ضحكة طفل ناعمة في أول ثانيتين',
+      timing: '0 - 2 ثوانٍ',
+      description: 'تجذب اهتمام الأمهات عاطفياً في الثانية الأولى',
+      audioType: 'baby_giggle',
+    },
+    {
+      effectName: 'صوت نقرات كتابة الاسم بالاستوديو',
+      timing: '3 - 6 ثوانٍ',
+      description: 'صوت تفاعلي رقيق يحاكي تجربة كتابة اسم الطفل على الموك آب',
+      audioType: 'typewriter',
+    },
+    {
+      effectName: 'صوت مكبس الطباعة الرقمية DTF',
+      timing: '7 - 10 ثوانٍ',
+      description: 'صوت بخار لطيف يبرز تثبيت الحبر المائي بدون ملمس خشن',
+      audioType: 'press',
+    },
+    {
+      effectName: 'نغمة التأكيد الفاخرة للبراند',
+      timing: '11 - 15 ثانية',
+      description: 'رنين نجاح متناغم لتحفيز إتمام الطلب الفوري وتأكيد الحجز',
+      audioType: 'chime',
+    },
+  ]);
+  const [activePlayingSound, setActivePlayingSound] = useState<string | null>(null);
+
+  // Visual Creative Customizer
+  const [visualCustomName, setVisualCustomName] = useState('نوح 👑');
+  const [visualAspectRatio, setVisualAspectRatio] = useState<'9:16' | '1:1' | '16:9'>('9:16');
+
+  // Universal Social Export Modal
+  const [exportModalCampaign, setExportModalCampaign] = useState<SocialCampaign | null>(null);
+  const [exportPlatformTab, setExportPlatformTab] = useState<'instagram' | 'tiktok' | 'facebook' | 'whatsapp' | 'web_share'>('instagram');
+  const [copiedExportNotice, setCopiedExportNotice] = useState(false);
+
+  // Campaign Execution & Publishing Suite (يدوي أو أوتوماتيك)
+  const [executionMode, setExecutionMode] = useState<'auto' | 'manual'>('auto');
+  const [autoPublishTiming, setAutoPublishTiming] = useState('اليوم، 8:00 مساءً (وقت الذروة للأمهات)');
+  const [isAutoPublishing, setIsAutoPublishing] = useState(false);
+  const [autoPublishProgress, setAutoPublishProgress] = useState(0);
+  const [autoPublishSuccess, setAutoPublishSuccess] = useState(false);
+  const [copiedCaptionSuccess, setCopiedCaptionSuccess] = useState(false);
+
+  const handlePlaySound = (type: 'baby_giggle' | 'chime' | 'typewriter' | 'press' | 'lullaby') => {
+    setActivePlayingSound(type);
+    soundEffects.playEffect(type);
+    setTimeout(() => setActivePlayingSound(null), 1200);
+  };
+
+  const getTargetLandingUrl = () => {
+    const origin = typeof window !== 'undefined' ? window.location.origin : 'https://2babyprint.eg';
+    let path = `${origin}/`;
+    if (targetPageKey === 'studio') path = `${origin}/#studio`;
+    else if (targetPageKey === 'templates') path = `${origin}/#templates`;
+    else if (targetPageKey === 'catalog') path = `${origin}/#catalog`;
+    else if (targetPageKey === 'express_checkout') path = `${origin}/#checkout`;
+    else if (targetPageKey === 'hero') path = `${origin}/#hero`;
+    else if (targetPageKey === 'product') path = `${origin}/#catalog?product=${selectedTargetProductId}`;
+
+    const cleanSlug = utmCampaignSlug.trim() || 'baby_print_promo';
+    return `${path}${path.includes('?') ? '&' : '?'}utm_source=${selectedPlatform}&utm_medium=${draftMediaType === 'video_reel' ? 'reel' : 'feed'}&utm_campaign=${encodeURIComponent(cleanSlug)}&utm_content=${encodeURIComponent(marketingAngle)}`;
+  };
+
+  const handleDownloadAdCreative = () => {
+    const canvas = document.createElement('canvas');
+    const width = visualAspectRatio === '9:16' ? 1080 : visualAspectRatio === '1:1' ? 1080 : 1920;
+    const height = visualAspectRatio === '9:16' ? 1920 : visualAspectRatio === '1:1' ? 1080 : 1080;
+    canvas.width = width;
+    canvas.height = height;
+    const ctx = canvas.getContext('2d');
+    if (!ctx) return;
+
+    const img = new Image();
+    img.crossOrigin = 'anonymous';
+    img.onload = () => {
+      ctx.drawImage(img, 0, 0, width, height);
+      // Dark gradient at bottom
+      const grad = ctx.createLinearGradient(0, height * 0.45, 0, height);
+      grad.addColorStop(0, 'rgba(0,0,0,0)');
+      grad.addColorStop(0.7, 'rgba(28,25,23,0.85)');
+      grad.addColorStop(1, 'rgba(12,10,9,0.98)');
+      ctx.fillStyle = grad;
+      ctx.fillRect(0, 0, width, height);
+
+      // Brand Title
+      ctx.fillStyle = '#f59e0b';
+      ctx.font = 'bold 36px sans-serif';
+      ctx.textAlign = 'right';
+      ctx.fillText('2BabyPrint Egypt 👶✨', width - 60, 80);
+
+      // Name Stamp Box
+      ctx.fillStyle = 'rgba(0,0,0,0.55)';
+      const boxW = 500;
+      const boxH = 120;
+      const boxX = (width - boxW) / 2;
+      const boxY = height * 0.42;
+      ctx.fillRect(boxX, boxY, boxW, boxH);
+      ctx.strokeStyle = '#f59e0b';
+      ctx.lineWidth = 4;
+      ctx.strokeRect(boxX, boxY, boxW, boxH);
+
+      ctx.fillStyle = '#fbbf24';
+      ctx.font = 'bold 22px sans-serif';
+      ctx.textAlign = 'center';
+      ctx.fillText('طباعة رقمية DTF معتمدة', width / 2, boxY + 40);
+
+      ctx.fillStyle = '#ffffff';
+      ctx.font = 'bold 44px sans-serif';
+      ctx.fillText(visualCustomName || 'نوح 👑', width / 2, boxY + 95);
+
+      // Headline
+      ctx.fillStyle = '#fbbf24';
+      ctx.font = 'bold 28px sans-serif';
+      ctx.textAlign = 'right';
+      ctx.fillText('✨ 100% قطن مصري فائق النعومة', width - 80, height - 190);
+
+      ctx.fillStyle = '#ffffff';
+      ctx.font = 'bold 44px sans-serif';
+      ctx.fillText(draftHeadline.slice(0, 40), width - 80, height - 130);
+
+      // CTA button
+      ctx.fillStyle = '#f59e0b';
+      ctx.fillRect(80, height - 95, 340, 55);
+      ctx.fillStyle = '#1c1917';
+      ctx.font = 'bold 24px sans-serif';
+      ctx.textAlign = 'center';
+      ctx.fillText(draftCta || 'صممي قطعتك الآن 🎨', 250, height - 60);
+
+      const link = document.createElement('a');
+      link.href = canvas.toDataURL('image/png');
+      link.download = `2BabyPrint_Ad_${visualAspectRatio.replace(':', '_')}.png`;
+      document.body.appendChild(link);
+      link.click();
+      document.body.removeChild(link);
+    };
+    img.src = draftImageUrl;
+  };
+
+  // Campaign Execution & Auto-Publishing Handler (أوتوماتيك أو يدوي)
+  const handleExecuteCampaign = (mode: 'auto' | 'manual', manualPlatform?: string) => {
+    const fullTargetUrl = getTargetLandingUrl();
+    const fullCaption = `${draftHeadline}\n\n${draftBodyText}\n\n👶 صممي قطعتك المطبوعة باسم طفلك الآن مباشرة:\n👉 ${fullTargetUrl}\n\n${draftHashtags.join(' ')}`;
+
+    if (mode === 'auto') {
+      setIsAutoPublishing(true);
+      setAutoPublishProgress(25);
+      setAutoPublishSuccess(false);
+
+      // Create new scheduled post for the social schedules tab
+      const newPost: SocialPostSchedule = {
+        id: `post-${Date.now()}`,
+        platform: selectedPlatform,
+        title: draftCampaignName || 'حملة ترويجية جديدة',
+        content: fullCaption,
+        scheduledTime: autoPublishTiming,
+        status: 'scheduled',
+        mediaType: draftMediaType === 'video_reel' ? 'reel' : 'image',
+        mediaUrl: draftImageUrl,
+        targetLink: fullTargetUrl,
+        engagement: { likes: 0, shares: 0, comments: 0 },
+      };
+
+      const updatedPosts = [newPost, ...postSchedules];
+      handleUpdatePosts(updatedPosts);
+
+      setTimeout(() => setAutoPublishProgress(65), 350);
+      setTimeout(() => setAutoPublishProgress(90), 750);
+      setTimeout(() => {
+        setAutoPublishProgress(100);
+        setIsAutoPublishing(false);
+        setAutoPublishSuccess(true);
+        soundEffects.playCelestialChime();
+        // Also persist campaign as active
+        handleLaunchCampaign('active');
+      }, 1100);
+    } else {
+      // Manual Social Share
+      const encodedUrl = encodeURIComponent(fullTargetUrl);
+      const encodedText = encodeURIComponent(`${draftHeadline}\n\n${draftBodyText}\n\n${fullTargetUrl}\n${draftHashtags.join(' ')}`);
+
+      let shareUrl = '';
+      if (manualPlatform === 'whatsapp') {
+        shareUrl = `https://api.whatsapp.com/send?text=${encodedText}`;
+      } else if (manualPlatform === 'telegram') {
+        shareUrl = `https://t.me/share/url?url=${encodedUrl}&text=${encodeURIComponent(draftHeadline + '\n\n' + draftBodyText)}`;
+      } else if (manualPlatform === 'facebook') {
+        shareUrl = `https://www.facebook.com/sharer/sharer.php?u=${encodedUrl}`;
+      } else if (manualPlatform === 'twitter') {
+        shareUrl = `https://twitter.com/intent/tweet?text=${encodeURIComponent(draftHeadline + ' 👶✨')}&url=${encodedUrl}`;
+      } else {
+        if (navigator.share) {
+          navigator.share({
+            title: draftHeadline,
+            text: draftBodyText,
+            url: fullTargetUrl,
+          }).catch(() => {});
+          return;
+        }
+      }
+
+      if (shareUrl) {
+        window.open(shareUrl, '_blank');
+      }
+    }
+  };
+
+  // Download complete campaign package text file
+  const handleDownloadFullCampaignKit = () => {
+    const fullTargetUrl = getTargetLandingUrl();
+    const content = `================================================================
+2BabyPrint Egypt - حزمة الدعاية والحملة الإعلانية المتكاملة
+================================================================
+اسم الحملة: ${draftCampaignName}
+المنصة: ${selectedPlatform.toUpperCase()}
+الهدف: ${selectedGoal}
+تاريخ التوليد: ${new Date().toLocaleDateString('ar-EG')}
+
+1. العنوان الرئيسي الجذاب (Hook & Headline):
+${draftHeadline}
+
+2. النص الإعلاني المقنع (Ad Body Copy):
+${draftBodyText}
+
+3. رابط الصفحة المستهدفة المتتبع (UTM Target Link):
+${fullTargetUrl}
+
+4. زر الإجراء (CTA):
+${draftCta}
+
+5. الهاشتاجات المقترحة:
+${draftHashtags.join(' ')}
+
+6. سيناريو تصوير الريلز / الفيديو القصير (9:16):
+- خطاف أول 3 ثوانٍ: ${draftVideoScript.hookSeconds}
+- المشهد واستوديو التصميم: ${draftVideoScript.visualAction}
+- التعليق الصوتي: ${draftVideoScript.voiceover}
+- الموسيقى والمؤثرات: ${draftVideoScript.soundTrackRecommendation}
+
+7. الجمهور المستهدف:
+- الفئة: ${draftAudience.label} (${draftAudience.ageRange})
+- المناطق: ${draftAudience.locations.join('، ')}
+- الاهتمامات: ${draftAudience.interests.join('، ')}
+================================================================`;
+
+    const blob = new Blob([content], { type: 'text/plain;charset=utf-8' });
+    const url = URL.createObjectURL(blob);
+    const link = document.createElement('a');
+    link.href = url;
+    link.download = `2BabyPrint_Campaign_${draftCampaignName.replace(/\s+/g, '_')}.txt`;
+    document.body.appendChild(link);
+    link.click();
+    document.body.removeChild(link);
+    URL.revokeObjectURL(url);
+  };
+
+  // Apply strategic AI marketing angle preset
+  const handleApplyMarketingAnglePreset = (angle: 'sebou' | 'eczema_cotton' | 'mom_designer' | 'express_uber') => {
+    setMarketingAngle(angle);
+    soundEffects.playCelestialChime();
+
+    if (angle === 'sebou') {
+      setDraftCampaignName('حملة ريلز السبوع الملكي بالقطن المصري');
+      setDraftHeadline('قطعة السبوع الأولى.. مكتوبة باسمه ومصنوعة من أنقى قطن مصري 👶✨');
+      setDraftBodyText('استقبلي طفلك بأجمل سالوبيت قطن مصري 100% طبيعي، مطبوع باسمه أو عبارات التهنئة في استوديو التصميم الحي خلال ثوانٍ. خامات فائقة النعومة معتمدة للأكزيما وبشرة المواليد، مع توصيل سريع لباب بيتك في القاهرة والجيزة.');
+      setDraftCta('صممي سالوبيت السبوع الآن 🎨');
+      setTargetPageKey('studio');
+      setVisualCustomName('نوح 👑');
+    } else if (angle === 'eczema_cotton') {
+      setDraftCampaignName('حملة أمان القطن المصري وبشرة المواليد الحساسة');
+      setDraftHeadline('راحة بشرة طفلك بدون بوليستر أو أحبار كيميائية قاسية.. قطن مصري 100% 🌿');
+      setDraftBodyText('لأن بشرة حديثي الولادة رقيقة ومعرضة للتحسس والأكزيما، جميع سالوبيتات وبافتات 2BabyPrint منسوجة من قطن مصري فائق النعومة، ومطبوعة بأحدث تقنية DTF المائية الآمنة طبياً والمعتمدة للبشرة الحساسة.');
+      setDraftCta('اكتشفي خامات القطن المعتمدة للأكزيما 🌿');
+      setTargetPageKey('templates');
+      setVisualCustomName('ليلى 🌸');
+    } else if (angle === 'mom_designer') {
+      setDraftCampaignName('حملة تجربة استوديو التصميم الحي - صممي قطعة طفلك بنفسك');
+      setDraftHeadline('صممي سالوبيت طفلك بنفسك وشوفي اسمه يلمع على الشاشة خلال ثوانٍ 🎨👑');
+      setDraftBodyText('جربي متعة الأم المصممة! ادخلي استوديو 2BabyPrint الحي، اكتبي اسم طفلك، اختاري التاج الملكي أو فيونكة السبوع، وشاهدي الموك آب يتحدث أمامك فوراً بجودة فائقة الدقة قبل أي طلب.');
+      setDraftCta('ابدأي التصميم الحي مجاناً 🎨');
+      setTargetPageKey('studio');
+      setVisualCustomName('زين 👑');
+    } else if (angle === 'express_uber') {
+      setDraftCampaignName('حملة هدايا السبوع العاجلة والشحن الفوري أوبر سكوتر');
+      setDraftHeadline('مزنوقة في هدية سبوع فخمة؟ بوكس هدايا مخصص باسم البيبي يوصلك اليوم في القاهرة 🛵✨');
+      setDraftBodyText('ما تشيليش هم الوقت! اختاري سالوبيت السبوع مع البافتة الملكية، واكتبي اسم البيبي، واختاري خدمة الشحن الفوري بأوبر سكوتر للتوصيل في نفس اليوم لجميع أحياء القاهرة الكبرى والجيزة مع دفع سريع عبر إنستاباي.');
+      setDraftCta('اطلبي الشحن الفوري السريع الآن 🛵');
+      setTargetPageKey('express_checkout');
+      setVisualCustomName('حمزة 👑');
+    }
+  };
 
   // AI Generation Trigger
   const handleGenerateAiCreative = async () => {
@@ -209,6 +527,9 @@ export const SocialAdsHub: React.FC<SocialAdsHubProps> = ({
       if (result.videoScript) {
         setDraftVideoScript(result.videoScript);
       }
+      if (result.soundEffects) {
+        setDraftSoundEffects(result.soundEffects);
+      }
     } catch (err) {
       console.error('Error generating AI campaign:', err);
     } finally {
@@ -216,8 +537,75 @@ export const SocialAdsHub: React.FC<SocialAdsHubProps> = ({
     }
   };
 
+  const handleDownloadMediaKitTxt = (campaign: SocialCampaign) => {
+    const landingUrl = campaign.adCreative.ctaUrl || getTargetLandingUrl();
+    const content = `========================================================
+2BabyPrint Egypt - Media Kit & Campaign Assets
+اسم الحملة: ${campaign.name}
+المنصة: ${campaign.platform.toUpperCase()}
+الهدف الإعلاني: ${campaign.goal}
+تاريخ الإطلاق: ${campaign.startDate}
+الميزانية اليومية: ${campaign.budgetPerDay} ج.م
+رابط الهبوط وتتبع UTM: ${landingUrl}
+========================================================
+
+[1] نصوص ومنشورات إنستغرام (Instagram Reels & Post):
+العنوان: ${campaign.adCreative.headline}
+الكابشن:
+${campaign.adCreative.bodyText}
+
+الهاشتاجات:
+${campaign.adCreative.hashtags.join(' ')}
+
+الدعوة لاتخاذ إجراء: ${campaign.adCreative.ctaText}
+
+--------------------------------------------------------
+[2] سكريبت فيديو ريلز / تيك توك 15 ثانية (Short Video Storyboard):
+${campaign.adCreative.videoScript ? `- أول 3 ثوانٍ (Hook): ${campaign.adCreative.videoScript.hookSeconds}
+- المشهد البصري: ${campaign.adCreative.videoScript.visualAction}
+- التعليق الصوتي: ${campaign.adCreative.videoScript.voiceover}
+- الموسيقى المقترحة: ${campaign.adCreative.videoScript.soundTrackRecommendation}` : 'غير محدد'}
+
+--------------------------------------------------------
+[3] المؤثرات الصوتية المقترحة (Sound Effects):
+${(campaign.adCreative.soundEffects || draftSoundEffects).map((s, i) => `${i + 1}. [${s.timing}] ${s.effectName}: ${s.description}`).join('\n')}
+
+--------------------------------------------------------
+[4] رسالة برودكاست واتساب (WhatsApp Broadcast / Community):
+🎉 *${campaign.adCreative.headline}*
+
+${campaign.adCreative.bodyText}
+
+✨ *مميزات استوديو 2BabyPrint:*
+• 100% قطن مصري طويل التيلة فائق النعومة.
+• أحبار مائية عضوية معتمدة آمنة لبشرة حديثي الولادة وحالات الأكزيما.
+• شحن فوري سريع اليوم في القاهرة والجيزة (أوبر سكوتر).
+
+🛒 *اطلبي وصممي قطعة طفلك الآن مباشرة عبر الرابط:*
+${landingUrl}
+
+--------------------------------------------------------
+[5] مواصفات الجمهور المستهدف (Audience Targeting):
+الفئة: ${campaign.targetAudience.label} (${campaign.targetAudience.ageRange})
+المناطق: ${campaign.targetAudience.locations.join('، ')}
+الاهتمامات: ${campaign.targetAudience.interests.join('، ')}
+الديموغرافيا: ${campaign.targetAudience.demographics}
+========================================================
+`;
+    const blob = new Blob([content], { type: 'text/plain;charset=utf-8' });
+    const url = URL.createObjectURL(blob);
+    const a = document.createElement('a');
+    a.href = url;
+    a.download = `2BabyPrint_MediaKit_${campaign.platform}_${Date.now()}.txt`;
+    document.body.appendChild(a);
+    a.click();
+    document.body.removeChild(a);
+    URL.revokeObjectURL(url);
+  };
+
   // Launch and Save New Campaign
   const handleLaunchCampaign = (status: CampaignStatus = 'active') => {
+    const fullTargetUrl = getTargetLandingUrl();
     const newCamp: SocialCampaign = {
       id: `camp-${Date.now()}`,
       name: draftCampaignName || 'حملة ترويجية جديدة',
@@ -232,11 +620,23 @@ export const SocialAdsHub: React.FC<SocialAdsHubProps> = ({
         headline: draftHeadline,
         bodyText: draftBodyText,
         ctaText: draftCta,
-        ctaUrl: '#catalog',
+        ctaUrl: fullTargetUrl,
         hashtags: draftHashtags,
         mediaType: draftMediaType,
         imageUrl: draftImageUrl,
         videoScript: draftMediaType === 'video_reel' ? draftVideoScript : undefined,
+        soundEffects: draftSoundEffects,
+        targetPageKey,
+        targetPageUrl: fullTargetUrl,
+        utmParams: {
+          source: selectedPlatform,
+          medium: draftMediaType === 'video_reel' ? 'reel' : 'feed',
+          campaign: utmCampaignSlug,
+          content: marketingAngle,
+        },
+        aspectRatio: visualAspectRatio,
+        visualCustomName,
+        marketingAngle,
       },
       metrics: {
         impressions: 0,
@@ -246,7 +646,7 @@ export const SocialAdsHub: React.FC<SocialAdsHubProps> = ({
         cpa: 0,
         roas: 0,
       },
-      aiNotes: 'حملة تم إنشاؤها بالذكاء الاصطناعي وجاهزة للمراقبة وتحقيق العائد الإعلاني.',
+      aiNotes: 'حملة تم إنشاؤها بالذكاء الاصطناعي مع رابط تتبع UTM ومؤثرات صوتية مخصصة.',
       createdAt: new Date().toISOString(),
     };
 
@@ -256,6 +656,54 @@ export const SocialAdsHub: React.FC<SocialAdsHubProps> = ({
       setCampaignSuccessNotice(false);
       setActiveTab('monitor');
     }, 1500);
+  };
+
+  // Instant Omni-Channel Export for Current Draft
+  const handleExportDraftToSocial = () => {
+    const fullTargetUrl = getTargetLandingUrl();
+    const draftCamp: SocialCampaign = {
+      id: `draft-${Date.now()}`,
+      name: draftCampaignName || 'حملة ترويجية جديدة',
+      platform: selectedPlatform,
+      goal: selectedGoal,
+      status: 'draft',
+      startDate: new Date().toISOString().split('T')[0],
+      budgetPerDay: draftDailyBudget,
+      totalSpent: 0,
+      targetAudience: draftAudience,
+      adCreative: {
+        headline: draftHeadline,
+        bodyText: draftBodyText,
+        ctaText: draftCta,
+        ctaUrl: fullTargetUrl,
+        hashtags: draftHashtags,
+        mediaType: draftMediaType,
+        imageUrl: draftImageUrl,
+        videoScript: draftMediaType === 'video_reel' ? draftVideoScript : undefined,
+        soundEffects: draftSoundEffects,
+        targetPageKey,
+        targetPageUrl: fullTargetUrl,
+        utmParams: {
+          source: selectedPlatform,
+          medium: draftMediaType === 'video_reel' ? 'reel' : 'feed',
+          campaign: utmCampaignSlug,
+          content: marketingAngle,
+        },
+        aspectRatio: visualAspectRatio,
+        visualCustomName,
+        marketingAngle,
+      },
+      metrics: {
+        impressions: 0,
+        clicks: 0,
+        ctr: 0,
+        conversions: 0,
+        cpa: 0,
+        roas: 0,
+      },
+      createdAt: new Date().toISOString(),
+    };
+    setExportModalCampaign(draftCamp);
   };
 
   // Toggle Campaign Status
@@ -310,6 +758,20 @@ ${campaign.adCreative.videoScript ? `\n[سيناريو ريلز/فيديو]:\n- 
   // Quality check for current draft
   const draftQuality = analyzeAdCreativeQuality(draftHeadline, draftBodyText, draftCta);
 
+  // Filtered campaigns & metrics calculations
+  const filteredCampaigns = campaigns.filter((c) => {
+    if (platformFilter === 'all') return true;
+    return c.platform === platformFilter;
+  });
+
+  const activeCampaigns = campaigns.filter((c) => c.status === 'active').length;
+  const totalAdSpend = campaigns.reduce((acc, c) => acc + (c.totalSpent || 0), 0);
+  const totalImpressions = campaigns.reduce((acc, c) => acc + (c.metrics?.impressions || 0), 0);
+  const totalClicks = campaigns.reduce((acc, c) => acc + (c.metrics?.clicks || 0), 0);
+  const totalConversions = campaigns.reduce((acc, c) => acc + (c.metrics?.conversions || 0), 0);
+  const avgCtr = totalImpressions > 0 ? ((totalClicks / totalImpressions) * 100).toFixed(1) : '3.8';
+  const avgRoas = campaigns.length > 0 ? (campaigns.reduce((acc, c) => acc + (c.metrics?.roas || 0), 0) / campaigns.length).toFixed(1) : '4.6';
+
   return (
     <div className="space-y-6">
       {/* 1. Header Banner */}
@@ -346,7 +808,7 @@ ${campaign.adCreative.videoScript ? `\n[سيناريو ريلز/فيديو]:\n- 
           <button
             type="button"
             onClick={() => setActiveTab('monitor')}
-            className={`px-3.5 py-2 text-xs font-bold rounded-lg transition-all flex items-center gap-1.5 cursor-pointer ${
+            className={`px-3 py-2 text-xs font-bold rounded-lg transition-all flex items-center gap-1.5 cursor-pointer ${
               activeTab === 'monitor'
                 ? 'bg-white text-stone-950 shadow-xs'
                 : 'text-stone-600 hover:text-stone-900'
@@ -359,20 +821,59 @@ ${campaign.adCreative.videoScript ? `\n[سيناريو ريلز/فيديو]:\n- 
           <button
             type="button"
             onClick={() => setActiveTab('create_ai')}
-            className={`px-3.5 py-2 text-xs font-bold rounded-lg transition-all flex items-center gap-1.5 cursor-pointer ${
+            className={`px-3 py-2 text-xs font-bold rounded-lg transition-all flex items-center gap-1.5 cursor-pointer ${
               activeTab === 'create_ai'
                 ? 'bg-white text-stone-950 shadow-xs'
                 : 'text-stone-600 hover:text-stone-900'
             }`}
           >
             <Sparkles className="w-4 h-4 text-amber-600" />
-            <span>منشئ الحملات والريلز</span>
+            <span>منشئ الحملات والصور</span>
+          </button>
+
+          <button
+            type="button"
+            onClick={() => setActiveTab('short_video')}
+            className={`px-3 py-2 text-xs font-bold rounded-lg transition-all flex items-center gap-1.5 cursor-pointer ${
+              activeTab === 'short_video'
+                ? 'bg-white text-stone-950 shadow-xs'
+                : 'text-stone-600 hover:text-stone-900'
+            }`}
+          >
+            <Film className="w-4 h-4 text-purple-600" />
+            <span>فيديو ريلز وتيك توك قصير</span>
+          </button>
+
+          <button
+            type="button"
+            onClick={() => setActiveTab('audio_effects')}
+            className={`px-3 py-2 text-xs font-bold rounded-lg transition-all flex items-center gap-1.5 cursor-pointer ${
+              activeTab === 'audio_effects'
+                ? 'bg-white text-stone-950 shadow-xs'
+                : 'text-stone-600 hover:text-stone-900'
+            }`}
+          >
+            <Volume2 className="w-4 h-4 text-rose-600" />
+            <span>المؤثرات الصوتية والتعليق</span>
+          </button>
+
+          <button
+            type="button"
+            onClick={() => setActiveTab('page_links')}
+            className={`px-3 py-2 text-xs font-bold rounded-lg transition-all flex items-center gap-1.5 cursor-pointer ${
+              activeTab === 'page_links'
+                ? 'bg-white text-stone-950 shadow-xs'
+                : 'text-stone-600 hover:text-stone-900'
+            }`}
+          >
+            <LinkIcon className="w-4 h-4 text-sky-600" />
+            <span>الربط بصفحات المتجر و QR</span>
           </button>
 
           <button
             type="button"
             onClick={() => setActiveTab('influencers')}
-            className={`px-3.5 py-2 text-xs font-bold rounded-lg transition-all flex items-center gap-1.5 cursor-pointer ${
+            className={`px-3 py-2 text-xs font-bold rounded-lg transition-all flex items-center gap-1.5 cursor-pointer ${
               activeTab === 'influencers'
                 ? 'bg-white text-stone-950 shadow-xs'
                 : 'text-stone-600 hover:text-stone-900'
@@ -385,7 +886,7 @@ ${campaign.adCreative.videoScript ? `\n[سيناريو ريلز/فيديو]:\n- 
           <button
             type="button"
             onClick={() => setActiveTab('social_pages')}
-            className={`px-3.5 py-2 text-xs font-bold rounded-lg transition-all flex items-center gap-1.5 cursor-pointer ${
+            className={`px-3 py-2 text-xs font-bold rounded-lg transition-all flex items-center gap-1.5 cursor-pointer ${
               activeTab === 'social_pages'
                 ? 'bg-white text-stone-950 shadow-xs'
                 : 'text-stone-600 hover:text-stone-900'
@@ -398,7 +899,7 @@ ${campaign.adCreative.videoScript ? `\n[سيناريو ريلز/فيديو]:\n- 
           <button
             type="button"
             onClick={() => setActiveTab('learning_engine')}
-            className={`px-3.5 py-2 text-xs font-bold rounded-lg transition-all flex items-center gap-1.5 cursor-pointer ${
+            className={`px-3 py-2 text-xs font-bold rounded-lg transition-all flex items-center gap-1.5 cursor-pointer ${
               activeTab === 'learning_engine'
                 ? 'bg-white text-stone-950 shadow-xs'
                 : 'text-stone-600 hover:text-stone-900'
@@ -411,7 +912,7 @@ ${campaign.adCreative.videoScript ? `\n[سيناريو ريلز/فيديو]:\n- 
           <button
             type="button"
             onClick={() => setActiveTab('simulator')}
-            className={`px-3.5 py-2 text-xs font-bold rounded-lg transition-all flex items-center gap-1.5 cursor-pointer ${
+            className={`px-3 py-2 text-xs font-bold rounded-lg transition-all flex items-center gap-1.5 cursor-pointer ${
               activeTab === 'simulator'
                 ? 'bg-white text-stone-950 shadow-xs'
                 : 'text-stone-600 hover:text-stone-900'
@@ -509,7 +1010,7 @@ ${campaign.adCreative.videoScript ? `\n[سيناريو ريلز/فيديو]:\n- 
 
           {/* Campaigns Table & Cards */}
           <div className="space-y-4">
-            {filteredCampaigns.map((camp) => (
+            {filteredCampaigns.map((camp: SocialCampaign) => (
               <div
                 key={camp.id}
                 className="bg-white rounded-2xl border border-stone-200 p-5 shadow-2xs hover:border-amber-300 transition-all space-y-4"
@@ -580,6 +1081,37 @@ ${campaign.adCreative.videoScript ? `\n[سيناريو ريلز/فيديو]:\n- 
                     </button>
 
                     {/* Copy Full Package Button */}
+                    {/* Export to Socials Button */}
+                    <button
+                      type="button"
+                      onClick={() => {
+                        setExportModalCampaign(camp);
+                        setExportPlatformTab(
+                          camp.platform === 'tiktok'
+                            ? 'tiktok'
+                            : camp.platform === 'facebook'
+                            ? 'facebook'
+                            : 'instagram'
+                        );
+                      }}
+                      className="px-3 py-1.5 bg-amber-500 hover:bg-amber-400 text-stone-950 rounded-lg text-xs font-bold flex items-center gap-1.5 transition-all shadow-2xs cursor-pointer"
+                      title="تصدير ومشاركة الإعلان إلى إنستغرام، تيك توك، فيسبوك، واتساب"
+                    >
+                      <Share2 className="w-3.5 h-3.5" />
+                      <span>تصدير لوسائل التواصل</span>
+                    </button>
+
+                    {/* Download Media Kit */}
+                    <button
+                      type="button"
+                      onClick={() => handleDownloadMediaKitTxt(camp)}
+                      className="p-1.5 text-stone-600 hover:text-stone-900 bg-stone-100 hover:bg-stone-200 rounded-lg transition-colors cursor-pointer"
+                      title="تحميل كملف نصي Media Kit (.txt)"
+                    >
+                      <FileDown className="w-4 h-4" />
+                    </button>
+
+                    {/* Copy Full Package Button */}
                     <button
                       type="button"
                       onClick={() => handleCopyPackage(camp)}
@@ -594,7 +1126,7 @@ ${campaign.adCreative.videoScript ? `\n[سيناريو ريلز/فيديو]:\n- 
                       ) : (
                         <>
                           <Copy className="w-3.5 h-3.5 text-stone-500" />
-                          <span>نسخ الحزمة الإعلانية</span>
+                          <span>نسخ الحزمة</span>
                         </>
                       )}
                     </button>
@@ -650,7 +1182,7 @@ ${campaign.adCreative.videoScript ? `\n[سيناريو ريلز/فيديو]:\n- 
                       {camp.adCreative.bodyText}
                     </p>
                     <div className="flex flex-wrap items-center gap-1 pt-1">
-                      {camp.adCreative.hashtags.map((h, i) => (
+                      {camp.adCreative.hashtags.map((h: string, i: number) => (
                         <span key={i} className="text-[10px] bg-amber-50 text-amber-800 px-2 py-0.5 rounded font-mono">
                           {h}
                         </span>
@@ -837,6 +1369,64 @@ ${campaign.adCreative.videoScript ? `\n[سيناريو ريلز/فيديو]:\n- 
               </div>
             </div>
 
+            {/* AI Marketing Angles & Instant Idea Bank */}
+            <div className="bg-gradient-to-r from-amber-500/10 via-amber-50 to-orange-50 p-5 rounded-2xl border border-amber-200/90 space-y-3">
+              <div className="flex items-center justify-between">
+                <div className="flex items-center gap-2">
+                  <Sparkles className="w-4 h-4 text-amber-600" />
+                  <span className="font-bold text-xs text-amber-950">
+                    بنك الأفكار التسويقية والزوايا النفسية بالذكاء الاصطناعي (AI Angles):
+                  </span>
+                </div>
+                <span className="text-[10px] bg-amber-200/70 text-amber-900 px-2 py-0.5 rounded-full font-bold">
+                  انقري لتطبيق الفكرة فوراً
+                </span>
+              </div>
+
+              <div className="grid grid-cols-1 sm:grid-cols-2 gap-2 text-xs">
+                {[
+                  {
+                    id: 'sebou',
+                    title: '👑 عاطفة السبوع الأول والتاج الملكي',
+                    desc: 'تركز على دموع الفرح وذكرى أول قطعة مطبوعة باسم المولود لاستقبال المهنئين',
+                    color: 'border-amber-400 bg-white hover:bg-amber-50/60',
+                  },
+                  {
+                    id: 'eczema_cotton',
+                    title: '🌿 أمان القطن الطبيعي 100% للأكزيما',
+                    desc: 'تركز على الأقمشة الطبية بدون بوليستر أو أصباغ قاسية لحماية جلد الرضع',
+                    color: 'border-emerald-400 bg-white hover:bg-emerald-50/60',
+                  },
+                  {
+                    id: 'mom_designer',
+                    title: '🎨 صممي سالوبيت طفلك بنفسك (Live Studio)',
+                    desc: 'تركز على تجربة الأم كمصممة ترى الاسم وتختار التيجان في ثوانٍ معدودة',
+                    color: 'border-purple-400 bg-white hover:bg-purple-50/60',
+                  },
+                  {
+                    id: 'express_uber',
+                    title: '🛵 هدايا السبوع العاجلة والشحن الفوري',
+                    desc: 'تركز على إنقاذ الأقارب بهدية فخمة تصل خلال ساعات عبر أوبر سكوتر',
+                    color: 'border-rose-400 bg-white hover:bg-rose-50/60',
+                  },
+                ].map((item) => (
+                  <button
+                    key={item.id}
+                    type="button"
+                    onClick={() => handleApplyMarketingAnglePreset(item.id as any)}
+                    className={`p-3 rounded-xl border text-right transition-all cursor-pointer shadow-2xs ${item.color} ${
+                      marketingAngle === item.id ? 'ring-2 ring-amber-500 font-bold' : ''
+                    }`}
+                  >
+                    <span className="block font-bold text-xs text-stone-900">{item.title}</span>
+                    <span className="block text-[11px] text-stone-600 mt-1 line-clamp-2 leading-relaxed">
+                      {item.desc}
+                    </span>
+                  </button>
+                ))}
+              </div>
+            </div>
+
             {/* Generated / Editable Copywriting Box */}
             <div className="bg-white p-6 rounded-2xl border border-stone-200 shadow-2xs space-y-4">
               <h3 className="font-bold text-stone-900 text-sm flex items-center justify-between">
@@ -973,23 +1563,290 @@ ${campaign.adCreative.videoScript ? `\n[سيناريو ريلز/فيديو]:\n- 
                 </div>
               )}
 
-              {/* Action Launch Buttons */}
-              <div className="flex flex-wrap items-center gap-3 pt-3 border-t border-stone-100">
+              {/* Campaign Execution & Publishing Suite (تعميل وتنفيذ المحتوى الدعائي يدوي أو أوتوماتيك) */}
+              <div className="bg-gradient-to-r from-stone-900 via-stone-850 to-stone-900 text-white p-5 rounded-2xl border border-stone-800 space-y-4 shadow-md mt-4">
+                <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-2 pb-2 border-b border-stone-800">
+                  <div className="flex items-center gap-2">
+                    <div className="w-8 h-8 rounded-xl bg-amber-500 text-stone-950 flex items-center justify-center font-black">
+                      <Zap className="w-4 h-4 fill-current" />
+                    </div>
+                    <div>
+                      <h4 className="font-bold text-xs text-white">
+                        تعميل وتنفيذ المحتوى الإعلاني ونشره (يدوي أو أوتوماتيك)
+                      </h4>
+                      <p className="text-[10px] text-stone-400">
+                        Creative Execution, Multi-Channel Auto-Dispatch & Assets Download
+                      </p>
+                    </div>
+                  </div>
+
+                  {/* Mode Switcher */}
+                  <div className="bg-stone-800 p-1 rounded-xl flex items-center border border-stone-700 text-xs">
+                    <button
+                      type="button"
+                      onClick={() => setExecutionMode('auto')}
+                      className={`px-3 py-1.5 rounded-lg font-bold transition-all cursor-pointer flex items-center gap-1.5 ${
+                        executionMode === 'auto'
+                          ? 'bg-amber-500 text-stone-950 shadow-xs'
+                          : 'text-stone-300 hover:text-white'
+                      }`}
+                    >
+                      <Zap className="w-3.5 h-3.5 fill-current" />
+                      <span>نشر أوتوماتيكي ذكي</span>
+                    </button>
+                    <button
+                      type="button"
+                      onClick={() => setExecutionMode('manual')}
+                      className={`px-3 py-1.5 rounded-lg font-bold transition-all cursor-pointer flex items-center gap-1.5 ${
+                        executionMode === 'manual'
+                          ? 'bg-amber-500 text-stone-950 shadow-xs'
+                          : 'text-stone-300 hover:text-white'
+                      }`}
+                    >
+                      <Share2 className="w-3.5 h-3.5" />
+                      <span>نشر يدوي ومشاركة</span>
+                    </button>
+                  </div>
+                </div>
+
+                {/* 1. Automated Dispatch Mode */}
+                {executionMode === 'auto' && (
+                  <div className="space-y-3 p-3 bg-stone-950/60 rounded-xl border border-stone-800">
+                    <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-2">
+                      <div className="space-y-0.5">
+                        <span className="text-xs font-bold text-amber-400 block">
+                          ⚡ جدولة وتصدير المحتوى أوتوماتيكياً:
+                        </span>
+                        <span className="text-[11px] text-stone-400 block">
+                          يتم إدراج المنشور مباشرة في جدول نشر صفحات المتجر وتثبيته في مراقب الحملات
+                        </span>
+                      </div>
+
+                      <select
+                        value={autoPublishTiming}
+                        onChange={(e) => setAutoPublishTiming(e.target.value)}
+                        className="bg-stone-900 text-stone-200 border border-stone-700 text-xs rounded-xl px-3 py-2 font-medium"
+                      >
+                        <option value="اليوم، 8:00 مساءً (وقت الذروة للأمهات)">اليوم، 8:00 م (ذروة الأمهات)</option>
+                        <option value="فوري الآن (Direct Auto-Dispatch)">نشر فوري الآن أوتوماتيك</option>
+                        <option value="غداً، 10:00 صباحاً (فترة الصباح)">غداً، 10:00 ص</option>
+                        <option value="الخميس، 6:00 مساءً (ويك إند حفلات السبوع)">الخميس، 6:00 م (ويك إند)</option>
+                      </select>
+                    </div>
+
+                    {/* Progress Bar when Running */}
+                    {isAutoPublishing && (
+                      <div className="space-y-1.5 pt-1 animate-in fade-in">
+                        <div className="flex items-center justify-between text-[11px] text-amber-300">
+                          <span>جاري تعميل وتوزيع الحملة أوتوماتيكياً على قنوات التواصل...</span>
+                          <span className="font-mono font-bold">{autoPublishProgress}%</span>
+                        </div>
+                        <div className="w-full bg-stone-800 h-2 rounded-full overflow-hidden">
+                          <div
+                            className="bg-gradient-to-r from-amber-500 to-emerald-400 h-full transition-all duration-300 rounded-full"
+                            style={{ width: `${autoPublishProgress}%` }}
+                          />
+                        </div>
+                      </div>
+                    )}
+
+                    {/* Success Notice */}
+                    {autoPublishSuccess && (
+                      <div className="p-2.5 bg-emerald-950/80 border border-emerald-500/50 rounded-xl text-emerald-300 text-xs flex items-center justify-between animate-in fade-in">
+                        <div className="flex items-center gap-2">
+                          <CheckCircle2 className="w-4 h-4 text-emerald-400 shrink-0" />
+                          <span>تم تعميل ونشر الحملة أوتوماتيكياً بنجاح وإدراجها بجدول النشر!</span>
+                        </div>
+                        <span className="text-[10px] font-mono text-emerald-400 bg-emerald-900/60 px-2 py-0.5 rounded">
+                          Published & Active ✓
+                        </span>
+                      </div>
+                    )}
+
+                    <div className="flex flex-wrap items-center justify-between gap-2 pt-1 border-t border-stone-800">
+                      <span className="text-[11px] text-stone-400">
+                        المنصات: إنستغرام، تيك توك، فيسبوك، واتساب وتلجرام
+                      </span>
+
+                      <button
+                        type="button"
+                        onClick={() => handleExecuteCampaign('auto')}
+                        disabled={isAutoPublishing}
+                        className="px-5 py-2.5 bg-gradient-to-r from-amber-500 to-amber-600 hover:from-amber-400 hover:to-amber-500 disabled:opacity-50 text-stone-950 font-black rounded-xl text-xs flex items-center gap-2 shadow-sm transition-transform active:scale-95 cursor-pointer"
+                      >
+                        <Zap className="w-4 h-4 fill-current" />
+                        <span>{isAutoPublishing ? 'جاري النشر الأوتوماتيكي...' : '⚡ تعميل وتنفيذ النشر الأوتوماتيكي الآن'}</span>
+                      </button>
+                    </div>
+                  </div>
+                )}
+
+                {/* 2. Manual Direct Share Mode */}
+                {executionMode === 'manual' && (
+                  <div className="space-y-3 p-3 bg-stone-950/60 rounded-xl border border-stone-800">
+                    <span className="text-xs font-bold text-stone-300 block">
+                      📲 النشر اليدوي المباشر عبر التطبيقات ومشاركة الروابط:
+                    </span>
+                    <div className="flex flex-wrap items-center gap-2">
+                      <button
+                        type="button"
+                        onClick={() => handleExecuteCampaign('manual', 'whatsapp')}
+                        className="px-3.5 py-2 bg-emerald-600 hover:bg-emerald-700 text-white rounded-xl text-xs font-bold flex items-center gap-1.5 shadow-2xs transition-transform active:scale-95 cursor-pointer"
+                      >
+                        <MessageCircle className="w-4 h-4" />
+                        <span>إرسال عبر واتساب</span>
+                      </button>
+
+                      <button
+                        type="button"
+                        onClick={() => handleExecuteCampaign('manual', 'telegram')}
+                        className="px-3.5 py-2 bg-sky-500 hover:bg-sky-600 text-white rounded-xl text-xs font-bold flex items-center gap-1.5 shadow-2xs transition-transform active:scale-95 cursor-pointer"
+                      >
+                        <Send className="w-4 h-4" />
+                        <span>مشاركة في تلجرام</span>
+                      </button>
+
+                      <button
+                        type="button"
+                        onClick={() => handleExecuteCampaign('manual', 'facebook')}
+                        className="px-3.5 py-2 bg-blue-600 hover:bg-blue-700 text-white rounded-xl text-xs font-bold flex items-center gap-1.5 shadow-2xs transition-transform active:scale-95 cursor-pointer"
+                      >
+                        <Facebook className="w-4 h-4" />
+                        <span>مشاركة على فيسبوك</span>
+                      </button>
+
+                      <button
+                        type="button"
+                        onClick={() => handleExecuteCampaign('manual', 'twitter')}
+                        className="px-3.5 py-2 bg-stone-800 hover:bg-stone-700 text-white rounded-xl text-xs font-bold flex items-center gap-1.5 shadow-2xs transition-transform active:scale-95 cursor-pointer border border-stone-700"
+                      >
+                        <Twitter className="w-4 h-4" />
+                        <span>تغريد على X</span>
+                      </button>
+
+                      <button
+                        type="button"
+                        onClick={() => handleExecuteCampaign('manual', 'web_share')}
+                        className="px-3.5 py-2 bg-purple-600 hover:bg-purple-700 text-white rounded-xl text-xs font-bold flex items-center gap-1.5 shadow-2xs transition-transform active:scale-95 cursor-pointer"
+                      >
+                        <Share2 className="w-4 h-4" />
+                        <span>مشاركة عبر الجهاز</span>
+                      </button>
+                    </div>
+
+                    {/* Quick copy bar */}
+                    <div className="flex flex-wrap items-center gap-2 pt-2 border-t border-stone-800">
+                      <button
+                        type="button"
+                        onClick={() => {
+                          const fullCaption = `${draftHeadline}\n\n${draftBodyText}\n\n👉 ${getTargetLandingUrl()}\n\n${draftHashtags.join(' ')}`;
+                          navigator.clipboard.writeText(fullCaption);
+                          setCopiedCaptionSuccess(true);
+                          setTimeout(() => setCopiedCaptionSuccess(false), 2000);
+                        }}
+                        className="px-3 py-1.5 bg-stone-800 hover:bg-stone-700 text-stone-200 rounded-lg text-xs font-bold flex items-center gap-1 cursor-pointer"
+                      >
+                        {copiedCaptionSuccess ? <Check className="w-3.5 h-3.5 text-emerald-400" /> : <Copy className="w-3.5 h-3.5" />}
+                        <span>{copiedCaptionSuccess ? 'تم نسخ النص الكامل ✓' : 'نسخ النص والهاشتاجات'}</span>
+                      </button>
+
+                      <button
+                        type="button"
+                        onClick={() => {
+                          navigator.clipboard.writeText(getTargetLandingUrl());
+                          soundEffects.playCelestialChime();
+                        }}
+                        className="px-3 py-1.5 bg-stone-800 hover:bg-stone-700 text-sky-400 rounded-lg text-xs font-bold flex items-center gap-1 cursor-pointer"
+                      >
+                        <LinkIcon className="w-3.5 h-3.5" />
+                        <span>نسخ رابط الصفحة المستهدفة (UTM)</span>
+                      </button>
+                    </div>
+                  </div>
+                )}
+
+                {/* 3. Direct Assets Download Section (تحميل مواد الحملة) */}
+                <div className="flex flex-wrap items-center justify-between gap-2 pt-2 border-t border-stone-800 text-xs">
+                  <span className="text-stone-300 font-bold flex items-center gap-1">
+                    <Download className="w-4 h-4 text-amber-400" />
+                    <span>تحميل وتعميل ملفات الحملة:</span>
+                  </span>
+
+                  <div className="flex flex-wrap items-center gap-2">
+                    <button
+                      type="button"
+                      onClick={handleDownloadAdCreative}
+                      className="px-3 py-1.5 bg-stone-800 hover:bg-stone-700 text-amber-400 border border-stone-700 rounded-xl text-xs font-bold flex items-center gap-1.5 transition-colors cursor-pointer"
+                    >
+                      <Download className="w-3.5 h-3.5" />
+                      <span>تحميل البانر المصمم (PNG)</span>
+                    </button>
+
+                    <button
+                      type="button"
+                      onClick={handleDownloadFullCampaignKit}
+                      className="px-3 py-1.5 bg-stone-800 hover:bg-stone-700 text-emerald-400 border border-stone-700 rounded-xl text-xs font-bold flex items-center gap-1.5 transition-colors cursor-pointer"
+                    >
+                      <FileDown className="w-3.5 h-3.5" />
+                      <span>تحميل الحزمة والسيناريو (.txt)</span>
+                    </button>
+                  </div>
+                </div>
+              </div>
+
+              {/* Standard Additional Hub Action Buttons */}
+              <div className="flex flex-wrap items-center gap-2 pt-2">
                 <button
                   type="button"
                   onClick={() => handleLaunchCampaign('active')}
-                  className="px-6 py-3 bg-amber-500 hover:bg-amber-600 active:scale-98 text-stone-950 font-black rounded-xl text-xs flex items-center gap-2 shadow-sm transition-all cursor-pointer"
+                  className="px-4 py-2 bg-amber-500 hover:bg-amber-600 text-stone-950 font-bold rounded-xl text-xs flex items-center gap-1.5 shadow-xs transition-all cursor-pointer"
                 >
-                  <Play className="w-4 h-4 fill-current" />
-                  <span>تثبيت وإطلاق الحملة في لوحة المراقبة</span>
+                  <Play className="w-3.5 h-3.5 fill-current" />
+                  <span>تثبيت وإطلاق في السجل</span>
+                </button>
+
+                <button
+                  type="button"
+                  onClick={handleExportDraftToSocial}
+                  className="px-3.5 py-2 bg-purple-700 hover:bg-purple-800 text-white font-bold rounded-xl text-xs flex items-center gap-1.5 shadow-xs cursor-pointer"
+                >
+                  <Share2 className="w-3.5 h-3.5" />
+                  <span>نافذة التصدير الشاملة</span>
+                </button>
+
+                <button
+                  type="button"
+                  onClick={() => setActiveTab('short_video')}
+                  className="px-3 py-2 bg-stone-100 hover:bg-stone-200 text-stone-800 font-semibold rounded-xl text-xs flex items-center gap-1.5 cursor-pointer"
+                >
+                  <Film className="w-3.5 h-3.5" />
+                  <span>محاكي الريلز (9:16)</span>
+                </button>
+
+                <button
+                  type="button"
+                  onClick={() => setActiveTab('audio_effects')}
+                  className="px-3 py-2 bg-rose-50 hover:bg-rose-100 text-rose-800 border border-rose-200 font-semibold rounded-xl text-xs flex items-center gap-1.5 cursor-pointer"
+                >
+                  <Volume2 className="w-3.5 h-3.5" />
+                  <span>المؤثرات الصوتية</span>
+                </button>
+
+                <button
+                  type="button"
+                  onClick={() => setActiveTab('page_links')}
+                  className="px-3 py-2 bg-sky-50 hover:bg-sky-100 text-sky-800 border border-sky-200 font-semibold rounded-xl text-xs flex items-center gap-1.5 cursor-pointer"
+                >
+                  <LinkIcon className="w-3.5 h-3.5" />
+                  <span>رابط المتجر و QR</span>
                 </button>
 
                 <button
                   type="button"
                   onClick={() => handleLaunchCampaign('draft')}
-                  className="px-4 py-3 bg-stone-100 hover:bg-stone-200 text-stone-800 font-bold rounded-xl text-xs flex items-center gap-1.5 transition-all cursor-pointer"
+                  className="px-3 py-2 bg-white border border-stone-200 hover:bg-stone-50 text-stone-600 font-semibold rounded-xl text-xs flex items-center gap-1 cursor-pointer"
                 >
-                  <span>حفظ كمسودة (Draft)</span>
+                  <span>حفظ كمسودة</span>
                 </button>
               </div>
             </div>
@@ -1949,6 +2806,43 @@ ${campaign.adCreative.videoScript ? `\n[سيناريو ريلز/فيديو]:\n- 
             </div>
           </div>
         </div>
+      )}
+
+      {/* 9. TAB: SHORT VIDEO & REEL SIMULATOR */}
+      {activeTab === 'short_video' && (
+        <ShortVideoReelStudio
+          initialBabyName={visualCustomName || 'نوح 👑'}
+          productName={selectedProduct}
+          targetLandingUrl={getTargetLandingUrl()}
+          onExportToSocial={(_scriptText) => {
+            handleExportDraftToSocial();
+          }}
+        />
+      )}
+
+      {/* 10. TAB: AUDIO EFFECTS & VOICEOVER STUDIO */}
+      {activeTab === 'audio_effects' && (
+        <AudioEffectsStudio />
+      )}
+
+      {/* 11. TAB: INTERNAL STORE PAGE LINKS & UTM QR BUILDER */}
+      {activeTab === 'page_links' && (
+        <InternalPageLinkBuilder
+          products={products}
+          currentPlatform={selectedPlatform}
+          initialBabyName={visualCustomName || 'نوح 👑'}
+          onUrlGenerated={(_url, pageKey) => {
+            setTargetPageKey(pageKey as any);
+          }}
+        />
+      )}
+
+      {/* UNIVERSAL OMNI-CHANNEL EXPORT MODAL */}
+      {exportModalCampaign && (
+        <UniversalExportModal
+          campaign={exportModalCampaign}
+          onClose={() => setExportModalCampaign(null)}
+        />
       )}
     </div>
   );

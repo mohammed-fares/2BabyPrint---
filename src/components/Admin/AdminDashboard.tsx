@@ -54,6 +54,7 @@ import { GarmentSilhouette } from '../DesignerStudio/GarmentSilhouette';
 import { exportPrintReadyFile, downloadDataUrl } from '../../utils/canvasRenderer';
 import { StorefrontCms } from './StorefrontCms';
 import { SocialAdsHub } from './SocialAdsHub';
+import { AnalyticsDashboard } from './AnalyticsDashboard';
 
 interface AdminDashboardProps {
   products: Product[];
@@ -663,60 +664,8 @@ ${order.notes ? `\n📝 *ملاحظات:* ${order.notes}` : ''}
         {/* 1. OVERVIEW TAB */}
         {activeTab === 'overview' && (
           <div className="space-y-6">
-            {/* KPI Cards Grid */}
-            <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-4">
-              <div className="bg-white p-5 rounded-2xl border border-stone-200 shadow-2xs">
-                <div className="flex items-center justify-between text-stone-500 text-xs mb-2">
-                  <span>إجمالي المبيعات المؤكدة</span>
-                  <DollarSign className="w-4 h-4 text-emerald-600" />
-                </div>
-                <div className="text-2xl font-extrabold text-stone-900 font-mono tabular-nums">
-                  {totalRevenue.toLocaleString()} ج.م
-                </div>
-                <div className="text-[11px] text-emerald-700 font-semibold mt-1">
-                  100% مدفوع إلكترونياً مسبقاً (إنستاباي ومحافظ)
-                </div>
-              </div>
-
-              <div className="bg-white p-5 rounded-2xl border border-stone-200 shadow-2xs">
-                <div className="flex items-center justify-between text-stone-500 text-xs mb-2">
-                  <span>طلبات قيد المراجعة</span>
-                  <Clock className="w-4 h-4 text-blue-600" />
-                </div>
-                <div className="text-2xl font-extrabold text-stone-900 font-mono tabular-nums">
-                  {pendingOrders} طلب
-                </div>
-                <div className="text-[11px] text-stone-500 mt-1">
-                  بانتظار التحويل أو إرسال للمطبعة
-                </div>
-              </div>
-
-              <div className="bg-white p-5 rounded-2xl border border-stone-200 shadow-2xs">
-                <div className="flex items-center justify-between text-stone-500 text-xs mb-2">
-                  <span>قيد الطباعة الرقمية (DTF)</span>
-                  <Printer className="w-4 h-4 text-amber-600" />
-                </div>
-                <div className="text-2xl font-extrabold text-amber-900 font-mono tabular-nums">
-                  {printingOrders} طلب
-                </div>
-                <div className="text-[11px] text-amber-700 mt-1">
-                  جاري التجهيز في مطبعة القاهرة
-                </div>
-              </div>
-
-              <div className="bg-white p-5 rounded-2xl border border-stone-200 shadow-2xs">
-                <div className="flex items-center justify-between text-stone-500 text-xs mb-2">
-                  <span>قيد الشحن والتوصيل</span>
-                  <Truck className="w-4 h-4 text-purple-600" />
-                </div>
-                <div className="text-2xl font-extrabold text-purple-900 font-mono tabular-nums">
-                  {shippingOrders} طلب
-                </div>
-                <div className="text-[11px] text-purple-700 mt-1">
-                  مع مندوب التوصيل في أحياء القاهرة
-                </div>
-              </div>
-            </div>
+            {/* Visual Recharts Analytics Dashboard */}
+            <AnalyticsDashboard orders={orders} products={products} />
 
             {/* Quick Action Banner */}
             <div className="bg-gradient-to-r from-amber-500/10 via-amber-50 to-orange-50 p-6 rounded-2xl border border-amber-200/80 flex flex-col md:flex-row md:items-center justify-between gap-4">

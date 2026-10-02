@@ -141,6 +141,82 @@ export default function App() {
 
   const [selectedCategory, setSelectedCategory] = useState<string>('all');
 
+  // Deep-linking URL and Hash handler (from Marketing Campaigns, Social Exports, QR Codes)
+  useEffect(() => {
+    const handleUrlHashAndQuery = () => {
+      if (typeof window === 'undefined') return;
+      const hash = window.location.hash;
+      const search = window.location.search;
+      const params = new URLSearchParams(search);
+
+      // Deep link to Studio
+      if (hash.startsWith('#studio') || hash.startsWith('#designer-studio')) {
+        const babyNameParam = params.get('babyName') || '';
+        const prodParam = params.get('product') || '';
+        if (prodParam) {
+          const match = products.find((p) => p.id === prodParam || p.name.includes(prodParam));
+          if (match) setStudioProduct(match);
+        }
+        if (babyNameParam) {
+          const customTemplate: DesignTemplate = {
+            id: `tpl-url-${Date.now()}`,
+            title: `تصميم ${babyNameParam}`,
+            subtitle: `مخصص للمولود ${babyNameParam}`,
+            category: 'sebou',
+            garmentType: 'romper_short',
+            defaultColorId: 'c-cream',
+            thumbnail: '/src/assets/images/product_romper_studio_1790519885828.jpg',
+            design: {
+              front: {
+                elements: [
+                  {
+                    id: 'text-baby-name',
+                    type: 'text',
+                    text: `${babyNameParam} 👑`,
+                    x: 60,
+                    y: 120,
+                    width: 180,
+                    height: 50,
+                    rotation: 0,
+                    opacity: 1,
+                    fontSize: 28,
+                    fontFamily: 'Cairo',
+                    fill: '#f59e0b',
+                    align: 'center',
+                    isBold: true,
+                  },
+                ],
+              },
+              back: { elements: [] },
+            },
+          };
+          setStudioInitialTemplate(customTemplate);
+        }
+        setIsStudioOpen(true);
+      } else if (hash.startsWith('#checkout')) {
+        setIsCheckoutOpen(true);
+      } else if (hash.startsWith('#catalog')) {
+        const prodParam = params.get('product') || '';
+        if (prodParam) {
+          const match = products.find((p) => p.id === prodParam);
+          if (match) {
+            setStudioProduct(match);
+            setIsStudioOpen(true);
+          }
+        }
+        const el = document.getElementById('catalog');
+        if (el) el.scrollIntoView({ behavior: 'smooth' });
+      } else if (hash.startsWith('#templates')) {
+        const el = document.getElementById('templates');
+        if (el) el.scrollIntoView({ behavior: 'smooth' });
+      }
+    };
+
+    handleUrlHashAndQuery();
+    window.addEventListener('hashchange', handleUrlHashAndQuery);
+    return () => window.removeEventListener('hashchange', handleUrlHashAndQuery);
+  }, [products]);
+
   // Open customizer specifically for a chosen product
   const handleOpenCustomizerForProduct = (product: Product) => {
     setStudioProduct(product);
