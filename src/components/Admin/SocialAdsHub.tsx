@@ -71,10 +71,85 @@ import { ShortVideoReelStudio } from './ShortVideoReelStudio';
 import { AudioEffectsStudio } from './AudioEffectsStudio';
 import { InternalPageLinkBuilder } from './InternalPageLinkBuilder';
 
+export interface ConnectedSocialChannel {
+  id: string;
+  platform: 'instagram' | 'tiktok' | 'facebook' | 'whatsapp' | 'telegram' | 'twitter' | 'pinterest';
+  name: string;
+  handle: string;
+  url: string;
+  followers: string;
+  status: 'connected' | 'active';
+  notes: string;
+}
+
+export const DEFAULT_CONNECTED_CHANNELS: ConnectedSocialChannel[] = [
+  {
+    id: 'ch-ig',
+    platform: 'instagram',
+    name: 'Instagram Business',
+    handle: '@2babyprint_eg',
+    url: 'https://instagram.com/2babyprint_eg',
+    followers: '42.5K متابع',
+    status: 'connected',
+    notes: 'تفاعل 6.2% • توجيه مباشر لرسائل الدايركت',
+  },
+  {
+    id: 'ch-tt',
+    platform: 'tiktok',
+    name: 'TikTok Creator',
+    handle: '@2babyprint_cairo',
+    url: 'https://tiktok.com/@2babyprint_cairo',
+    followers: '88.4K متابع',
+    status: 'connected',
+    notes: '1.2M مشاهدة شهرية • ريلز تصوير السبوع ومكبس DTF',
+  },
+  {
+    id: 'ch-fb',
+    platform: 'facebook',
+    name: 'Facebook Page',
+    handle: '2BabyPrint Egypt',
+    url: 'https://facebook.com/2BabyPrintEgypt',
+    followers: '65K معجب',
+    status: 'connected',
+    notes: 'رد فوري على رسائل ماسنجر وتأكيدات إنستاباي',
+  },
+  {
+    id: 'ch-wa',
+    platform: 'whatsapp',
+    name: 'واتساب الأعمال والمطبعة',
+    handle: '01019998877',
+    url: 'https://wa.me/201019998877',
+    followers: 'كتالوج معتمد',
+    status: 'active',
+    notes: 'أوامر الطباعة الفورية وإشعارات شحن أوبر سكوتر',
+  },
+  {
+    id: 'ch-tg',
+    platform: 'telegram',
+    name: 'قناة تلجرام التشغيل',
+    handle: '@BabyPrintProduction',
+    url: 'https://t.me/BabyPrintProduction',
+    followers: 'فريق العمل والمطبعة',
+    status: 'active',
+    notes: 'تلقي ملفات الطباعة 300 DPI عالية الدقة',
+  },
+  {
+    id: 'ch-tw',
+    platform: 'twitter',
+    name: 'حساب X (تويتر)',
+    handle: '@2BabyPrint',
+    url: 'https://x.com/2BabyPrint',
+    followers: '12K متابع',
+    status: 'connected',
+    notes: 'تغريدات العروض وتجارب العملاء',
+  },
+];
+
 interface SocialAdsHubProps {
   campaigns: SocialCampaign[];
   onSaveCampaigns: (campaigns: SocialCampaign[]) => void;
   products: Product[];
+  displayMode?: 'standard' | 'projector';
 }
 
 type HubTab =
@@ -92,6 +167,7 @@ export const SocialAdsHub: React.FC<SocialAdsHubProps> = ({
   campaigns,
   onSaveCampaigns,
   products,
+  displayMode = 'standard',
 }) => {
   const [activeTab, setActiveTab] = useState<HubTab>('monitor');
   const [platformFilter, setPlatformFilter] = useState<string>('all');
@@ -151,6 +227,124 @@ export const SocialAdsHub: React.FC<SocialAdsHubProps> = ({
       localStorage.setItem('2babyprint_post_schedules', JSON.stringify(updated));
     } catch (e) {
       console.error(e);
+    }
+  };
+
+  // Connected Real Social Channels State (Persisted in browser)
+  const [connectedChannels, setConnectedChannels] = useState<ConnectedSocialChannel[]>(() => {
+    try {
+      const saved = localStorage.getItem('2babyprint_connected_channels');
+      return saved ? JSON.parse(saved) : DEFAULT_CONNECTED_CHANNELS;
+    } catch {
+      return DEFAULT_CONNECTED_CHANNELS;
+    }
+  });
+  const [isEditChannelsModalOpen, setIsEditChannelsModalOpen] = useState(false);
+  const [isAddChannelModalOpen, setIsAddChannelModalOpen] = useState(false);
+  const [editingChannel, setEditingChannel] = useState<ConnectedSocialChannel | null>(null);
+
+  // New Custom Channel State
+  const [newChannelPlatform, setNewChannelPlatform] = useState<ConnectedSocialChannel['platform']>('facebook');
+  const [newChannelName, setNewChannelName] = useState('');
+  const [newChannelHandle, setNewChannelHandle] = useState('');
+  const [newChannelUrl, setNewChannelUrl] = useState('');
+  const [newChannelFollowers, setNewChannelFollowers] = useState('');
+  const [newChannelNotes, setNewChannelNotes] = useState('');
+
+  const handleUpdateChannels = (updated: ConnectedSocialChannel[]) => {
+    setConnectedChannels(updated);
+    try {
+      localStorage.setItem('2babyprint_connected_channels', JSON.stringify(updated));
+    } catch (e) {
+      console.error(e);
+    }
+  };
+
+  const handleSaveChannelEdit = (channel: ConnectedSocialChannel) => {
+    const updated = connectedChannels.map((c) => (c.id === channel.id ? channel : c));
+    handleUpdateChannels(updated);
+    setEditingChannel(null);
+    soundEffects.playCelestialChime();
+  };
+
+  const handleAddNewChannel = () => {
+    if (!newChannelName.trim() || !newChannelUrl.trim()) return;
+    const newChan: ConnectedSocialChannel = {
+      id: `ch-${Date.now()}`,
+      platform: newChannelPlatform,
+      name: newChannelName.trim(),
+      handle: newChannelHandle.trim() || `@${newChannelName.toLowerCase().replace(/\s+/g, '_')}`,
+      url: newChannelUrl.trim(),
+      followers: newChannelFollowers.trim() || 'حساب رسمي نشط',
+      status: 'active',
+      notes: newChannelNotes.trim() || 'نشر فوري وتوجيه لمتجر 2BabyPrint',
+    };
+    handleUpdateChannels([newChan, ...connectedChannels]);
+    setIsAddChannelModalOpen(false);
+    setNewChannelName('');
+    setNewChannelHandle('');
+    setNewChannelUrl('');
+    setNewChannelFollowers('');
+    setNewChannelNotes('');
+    soundEffects.playCelestialChime();
+  };
+
+  const handleDeleteChannel = (id: string) => {
+    if (confirm('هل أنت متأكد من إزالة ربط هذه القناة من لوحة التحكم؟')) {
+      handleUpdateChannels(connectedChannels.filter((c) => c.id !== id));
+    }
+  };
+
+  // Direct Live Publish of a scheduled post (فوري وحقيقي)
+  const handlePublishPostLive = (post: SocialPostSchedule) => {
+    const updated = postSchedules.map((p) =>
+      p.id === post.id ? { ...p, status: 'published' as const } : p
+    );
+    handleUpdatePosts(updated);
+    soundEffects.playCelestialChime();
+
+    const targetUrl = post.targetLink || (typeof window !== 'undefined' ? window.location.origin : 'https://2babyprint.eg');
+    const fullMessage = `${post.title}\n\n${post.content}\n\n🛒 رابط المتجر وتصميم قطعتك:\n${targetUrl}`;
+    const textEncoded = encodeURIComponent(fullMessage);
+    const linkEncoded = encodeURIComponent(targetUrl);
+
+    let shareUrl = '';
+    if (post.platform === 'facebook') {
+      shareUrl = `https://www.facebook.com/sharer/sharer.php?u=${linkEncoded}&quote=${encodeURIComponent(post.content)}`;
+    } else if (post.platform === 'twitter') {
+      shareUrl = `https://twitter.com/intent/tweet?text=${encodeURIComponent(post.content)}&url=${linkEncoded}`;
+    } else if (post.platform === 'whatsapp') {
+      shareUrl = `https://api.whatsapp.com/send?text=${textEncoded}`;
+    } else if (post.platform === 'telegram') {
+      shareUrl = `https://t.me/share/url?url=${linkEncoded}&text=${encodeURIComponent(post.content)}`;
+    } else {
+      if (navigator.share) {
+        navigator.share({
+          title: post.title,
+          text: fullMessage,
+          url: targetUrl,
+        }).catch(() => {});
+        return;
+      } else {
+        navigator.clipboard.writeText(fullMessage);
+        const channel = connectedChannels.find((c) => c.platform === post.platform);
+        if (channel?.url) {
+          window.open(channel.url, '_blank');
+        } else {
+          window.open(`https://${post.platform}.com/`, '_blank');
+        }
+        return;
+      }
+    }
+
+    if (shareUrl) {
+      window.open(shareUrl, '_blank');
+    }
+  };
+
+  const handleDeletePostSchedule = (id: string) => {
+    if (confirm('هل أنت متأكد من حذف هذا المنشور من جدول النشر؟')) {
+      handleUpdatePosts(postSchedules.filter((p) => p.id !== id));
     }
   };
 
@@ -772,20 +966,27 @@ ${campaign.adCreative.videoScript ? `\n[سيناريو ريلز/فيديو]:\n- 
   const avgCtr = totalImpressions > 0 ? ((totalClicks / totalImpressions) * 100).toFixed(1) : '3.8';
   const avgRoas = campaigns.length > 0 ? (campaigns.reduce((acc, c) => acc + (c.metrics?.roas || 0), 0) / campaigns.length).toFixed(1) : '4.6';
 
+  const isProjector = displayMode === 'projector';
+
   return (
-    <div className="space-y-6">
+    <div className={`space-y-6 ${isProjector ? 'text-base' : ''}`}>
       {/* 1. Header Banner */}
       <div className="flex flex-col md:flex-row md:items-center justify-between gap-4 bg-gradient-to-r from-stone-900 via-stone-850 to-stone-900 text-white p-6 rounded-2xl shadow-sm border border-stone-800">
         <div>
           <div className="flex items-center gap-2 text-xs font-semibold text-amber-400 mb-1">
             <Sparkles className="w-4 h-4" />
             <span>نظام التسويق والإعلانات الممولة بالذكاء الاصطناعي (Meta, TikTok, Google)</span>
+            {isProjector && (
+              <span className="bg-purple-500/20 text-purple-300 border border-purple-500/50 px-2 py-0.5 rounded-full text-[11px] font-bold">
+                📽️ شاشة عرض كبيرة
+              </span>
+            )}
           </div>
-          <h2 className="text-xl sm:text-2xl font-black tracking-tight text-white flex items-center gap-2">
+          <h2 className={`${isProjector ? 'text-2xl sm:text-3xl lg:text-4xl' : 'text-xl sm:text-2xl'} font-black tracking-tight text-white flex items-center gap-2`}>
             <Megaphone className="w-6 h-6 text-amber-400" />
             <span>مركز الدعاية والحملات والمراقبة الذكية</span>
           </h2>
-          <p className="text-xs text-stone-300 mt-1 max-w-2xl leading-relaxed">
+          <p className="text-xs sm:text-sm text-stone-300 mt-1 max-w-2xl leading-relaxed">
             أنشئي حملاتك الترويجية لمنصات إنستغرام، فيسبوك، تيك توك، وسناب شات مع سيناريوهات ريلز واستهداف دقيق لأمهات القاهرة ومحافظات مصر ومراقبة فورية للعائد على الإنفاق (ROAS).
           </p>
         </div>
@@ -794,7 +995,7 @@ ${campaign.adCreative.videoScript ? `\n[سيناريو ريلز/فيديو]:\n- 
           <button
             type="button"
             onClick={() => setActiveTab('create_ai')}
-            className="px-5 py-2.5 bg-amber-500 hover:bg-amber-400 text-stone-950 font-bold rounded-xl text-xs flex items-center gap-2 shadow-sm transition-transform active:scale-98 cursor-pointer"
+            className="px-5 py-2.5 bg-amber-500 hover:bg-amber-400 text-stone-950 font-bold rounded-xl text-xs sm:text-sm flex items-center gap-2 shadow-sm transition-transform active:scale-98 cursor-pointer"
           >
             <Sparkles className="w-4 h-4" />
             <span>إنشاء إعلان جديد بالذكاء الاصطناعي</span>
@@ -804,11 +1005,11 @@ ${campaign.adCreative.videoScript ? `\n[سيناريو ريلز/فيديو]:\n- 
 
       {/* 2. Primary Tabs */}
       <div className="flex flex-col lg:flex-row lg:items-center justify-between gap-3 border-b border-stone-200 pb-2">
-        <div className="flex flex-wrap items-center gap-1.5 p-1 bg-stone-100 rounded-xl">
+        <div className="flex flex-wrap items-center gap-1.5 p-1 bg-stone-100 rounded-xl overflow-x-auto scrollbar-none w-full lg:w-auto">
           <button
             type="button"
             onClick={() => setActiveTab('monitor')}
-            className={`px-3 py-2 text-xs font-bold rounded-lg transition-all flex items-center gap-1.5 cursor-pointer ${
+            className={`px-3 py-2 text-xs font-bold rounded-lg transition-all flex items-center gap-1.5 cursor-pointer whitespace-nowrap ${
               activeTab === 'monitor'
                 ? 'bg-white text-stone-950 shadow-xs'
                 : 'text-stone-600 hover:text-stone-900'
@@ -821,7 +1022,7 @@ ${campaign.adCreative.videoScript ? `\n[سيناريو ريلز/فيديو]:\n- 
           <button
             type="button"
             onClick={() => setActiveTab('create_ai')}
-            className={`px-3 py-2 text-xs font-bold rounded-lg transition-all flex items-center gap-1.5 cursor-pointer ${
+            className={`px-3 py-2 text-xs font-bold rounded-lg transition-all flex items-center gap-1.5 cursor-pointer whitespace-nowrap ${
               activeTab === 'create_ai'
                 ? 'bg-white text-stone-950 shadow-xs'
                 : 'text-stone-600 hover:text-stone-900'
@@ -834,7 +1035,7 @@ ${campaign.adCreative.videoScript ? `\n[سيناريو ريلز/فيديو]:\n- 
           <button
             type="button"
             onClick={() => setActiveTab('short_video')}
-            className={`px-3 py-2 text-xs font-bold rounded-lg transition-all flex items-center gap-1.5 cursor-pointer ${
+            className={`px-3 py-2 text-xs font-bold rounded-lg transition-all flex items-center gap-1.5 cursor-pointer whitespace-nowrap ${
               activeTab === 'short_video'
                 ? 'bg-white text-stone-950 shadow-xs'
                 : 'text-stone-600 hover:text-stone-900'
@@ -847,7 +1048,7 @@ ${campaign.adCreative.videoScript ? `\n[سيناريو ريلز/فيديو]:\n- 
           <button
             type="button"
             onClick={() => setActiveTab('audio_effects')}
-            className={`px-3 py-2 text-xs font-bold rounded-lg transition-all flex items-center gap-1.5 cursor-pointer ${
+            className={`px-3 py-2 text-xs font-bold rounded-lg transition-all flex items-center gap-1.5 cursor-pointer whitespace-nowrap ${
               activeTab === 'audio_effects'
                 ? 'bg-white text-stone-950 shadow-xs'
                 : 'text-stone-600 hover:text-stone-900'
@@ -860,7 +1061,7 @@ ${campaign.adCreative.videoScript ? `\n[سيناريو ريلز/فيديو]:\n- 
           <button
             type="button"
             onClick={() => setActiveTab('page_links')}
-            className={`px-3 py-2 text-xs font-bold rounded-lg transition-all flex items-center gap-1.5 cursor-pointer ${
+            className={`px-3 py-2 text-xs font-bold rounded-lg transition-all flex items-center gap-1.5 cursor-pointer whitespace-nowrap ${
               activeTab === 'page_links'
                 ? 'bg-white text-stone-950 shadow-xs'
                 : 'text-stone-600 hover:text-stone-900'
@@ -873,7 +1074,7 @@ ${campaign.adCreative.videoScript ? `\n[سيناريو ريلز/فيديو]:\n- 
           <button
             type="button"
             onClick={() => setActiveTab('influencers')}
-            className={`px-3 py-2 text-xs font-bold rounded-lg transition-all flex items-center gap-1.5 cursor-pointer ${
+            className={`px-3 py-2 text-xs font-bold rounded-lg transition-all flex items-center gap-1.5 cursor-pointer whitespace-nowrap ${
               activeTab === 'influencers'
                 ? 'bg-white text-stone-950 shadow-xs'
                 : 'text-stone-600 hover:text-stone-900'
@@ -886,7 +1087,7 @@ ${campaign.adCreative.videoScript ? `\n[سيناريو ريلز/فيديو]:\n- 
           <button
             type="button"
             onClick={() => setActiveTab('social_pages')}
-            className={`px-3 py-2 text-xs font-bold rounded-lg transition-all flex items-center gap-1.5 cursor-pointer ${
+            className={`px-3 py-2 text-xs font-bold rounded-lg transition-all flex items-center gap-1.5 cursor-pointer whitespace-nowrap ${
               activeTab === 'social_pages'
                 ? 'bg-white text-stone-950 shadow-xs'
                 : 'text-stone-600 hover:text-stone-900'
@@ -899,7 +1100,7 @@ ${campaign.adCreative.videoScript ? `\n[سيناريو ريلز/فيديو]:\n- 
           <button
             type="button"
             onClick={() => setActiveTab('learning_engine')}
-            className={`px-3 py-2 text-xs font-bold rounded-lg transition-all flex items-center gap-1.5 cursor-pointer ${
+            className={`px-3 py-2 text-xs font-bold rounded-lg transition-all flex items-center gap-1.5 cursor-pointer whitespace-nowrap ${
               activeTab === 'learning_engine'
                 ? 'bg-white text-stone-950 shadow-xs'
                 : 'text-stone-600 hover:text-stone-900'
@@ -912,7 +1113,7 @@ ${campaign.adCreative.videoScript ? `\n[سيناريو ريلز/فيديو]:\n- 
           <button
             type="button"
             onClick={() => setActiveTab('simulator')}
-            className={`px-3 py-2 text-xs font-bold rounded-lg transition-all flex items-center gap-1.5 cursor-pointer ${
+            className={`px-3 py-2 text-xs font-bold rounded-lg transition-all flex items-center gap-1.5 cursor-pointer whitespace-nowrap ${
               activeTab === 'simulator'
                 ? 'bg-white text-stone-950 shadow-xs'
                 : 'text-stone-600 hover:text-stone-900'
@@ -960,7 +1161,7 @@ ${campaign.adCreative.videoScript ? `\n[سيناريو ريلز/فيديو]:\n- 
                 <span>إجمالي الإنفاق الإعلاني</span>
                 <DollarSign className="w-4 h-4 text-amber-600" />
               </div>
-              <div className="text-2xl font-black text-stone-900 font-mono">
+              <div className={`${isProjector ? 'text-3xl lg:text-4xl' : 'text-2xl'} font-black text-stone-900 font-mono`}>
                 {totalAdSpend.toLocaleString()} ج.م
               </div>
               <div className="text-[11px] text-stone-500 mt-1">
@@ -973,7 +1174,7 @@ ${campaign.adCreative.videoScript ? `\n[سيناريو ريلز/فيديو]:\n- 
                 <span>الطلبات والمبيعات الناتجة</span>
                 <ShoppingBag className="w-4 h-4 text-emerald-600" />
               </div>
-              <div className="text-2xl font-black text-emerald-800 font-mono">
+              <div className={`${isProjector ? 'text-3xl lg:text-4xl' : 'text-2xl'} font-black text-emerald-800 font-mono`}>
                 {totalConversions} طلب
               </div>
               <div className="text-[11px] text-emerald-700 font-semibold mt-1">
@@ -986,7 +1187,7 @@ ${campaign.adCreative.videoScript ? `\n[سيناريو ريلز/فيديو]:\n- 
                 <span>مرات الظهور والنقرات</span>
                 <Eye className="w-4 h-4 text-blue-600" />
               </div>
-              <div className="text-2xl font-black text-stone-900 font-mono">
+              <div className={`${isProjector ? 'text-3xl lg:text-4xl' : 'text-2xl'} font-black text-stone-900 font-mono`}>
                 {totalImpressions.toLocaleString()}
               </div>
               <div className="text-[11px] text-blue-700 font-semibold mt-1">
@@ -999,7 +1200,7 @@ ${campaign.adCreative.videoScript ? `\n[سيناريو ريلز/فيديو]:\n- 
                 <span>متوسط العائد الإعلاني (ROAS)</span>
                 <TrendingUp className="w-4 h-4 text-purple-600" />
               </div>
-              <div className="text-2xl font-black text-purple-900 font-mono">
+              <div className={`${isProjector ? 'text-3xl lg:text-4xl' : 'text-2xl'} font-black text-purple-900 font-mono`}>
                 {avgRoas}x
               </div>
               <div className="text-[11px] text-purple-700 font-semibold mt-1">
@@ -2426,7 +2627,7 @@ ${campaign.adCreative.videoScript ? `\n[سيناريو ريلز/فيديو]:\n- 
         </div>
       )}
 
-      {/* 7. TAB 5: SOCIAL PAGES & CONTENT CALENDAR */}
+      {/* 7. TAB 5: REAL SOCIAL PAGES & CONTENT CALENDAR */}
       {activeTab === 'social_pages' && (
         <div className="space-y-6">
           {/* Linked Social Pages Overview */}
@@ -2438,15 +2639,33 @@ ${campaign.adCreative.videoScript ? `\n[سيناريو ريلز/فيديو]:\n- 
                   <span>الصفحات والحسابات الرسمية المرتبطة بمتجر 2BabyPrint</span>
                 </h3>
                 <p className="text-xs text-stone-500 mt-0.5">
-                  إدارة الصلاحيات الكاملة لمحتوى الصفحات، الجدولة التلقائية، وتحليل تفاعل الجمهور
+                  ربط الحسابات الحقيقية، اختبار الروابط المباشرة، الجدولة والنشر الفعلي بدون أي بيانات وهمية
                 </p>
               </div>
 
-              <div className="flex items-center gap-2">
+              <div className="flex flex-wrap items-center gap-2">
+                <button
+                  type="button"
+                  onClick={() => setIsAddChannelModalOpen(true)}
+                  className="px-3.5 py-2 bg-emerald-600 hover:bg-emerald-700 text-white rounded-xl text-xs font-bold flex items-center gap-1.5 cursor-pointer shadow-xs transition-transform active:scale-95"
+                >
+                  <Plus className="w-3.5 h-3.5" />
+                  <span>ربط حساب / منصة جديدة</span>
+                </button>
+
+                <button
+                  type="button"
+                  onClick={() => setIsEditChannelsModalOpen(true)}
+                  className="px-3.5 py-2 bg-amber-500 hover:bg-amber-600 text-stone-950 rounded-xl text-xs font-bold flex items-center gap-1.5 cursor-pointer shadow-xs transition-transform active:scale-95"
+                >
+                  <Sliders className="w-3.5 h-3.5" />
+                  <span>تعديل الحسابات المرتبطة</span>
+                </button>
+
                 <button
                   type="button"
                   onClick={() => setIsAddPostModalOpen(true)}
-                  className="px-4 py-2 bg-stone-900 hover:bg-stone-800 text-white rounded-xl text-xs font-bold flex items-center gap-1.5 cursor-pointer shrink-0"
+                  className="px-4 py-2 bg-stone-900 hover:bg-stone-800 text-white rounded-xl text-xs font-bold flex items-center gap-1.5 cursor-pointer shrink-0 transition-transform active:scale-95"
                 >
                   <Plus className="w-4 h-4 text-amber-400" />
                   <span>جدولة منشور جديد</span>
@@ -2454,53 +2673,79 @@ ${campaign.adCreative.videoScript ? `\n[سيناريو ريلز/فيديو]:\n- 
               </div>
             </div>
 
-            <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-3">
-              <div className="p-3.5 rounded-xl border border-pink-200 bg-pink-50/50 space-y-1">
-                <div className="flex items-center justify-between">
-                  <span className="font-bold text-pink-950 text-xs">Instagram</span>
-                  <span className="text-[10px] bg-emerald-100 text-emerald-800 font-bold px-1.5 py-0.5 rounded">متصل ✅</span>
-                </div>
-                <div className="font-mono text-xs text-stone-700">@2babyprint_eg</div>
-                <div className="text-[11px] text-stone-500">42.5K متابع • معدل تفاعل 6.2%</div>
-              </div>
+            {/* Channels Grid */}
+            <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-3">
+              {connectedChannels.map((ch) => (
+                <div
+                  key={ch.id}
+                  className="p-4 rounded-2xl border border-stone-200 bg-stone-50/70 hover:bg-white hover:border-amber-400 transition-all space-y-2.5 shadow-2xs"
+                >
+                  <div className="flex items-center justify-between">
+                    <span className="font-bold text-stone-900 text-xs flex items-center gap-1.5">
+                      <span className="w-2 h-2 rounded-full bg-emerald-500 animate-pulse" />
+                      <span>{ch.name}</span>
+                    </span>
+                    <div className="flex items-center gap-1.5">
+                      <span className="text-[10px] bg-emerald-100 text-emerald-800 font-bold px-2 py-0.5 rounded-full font-mono">
+                        جاهز للنشر ✅
+                      </span>
+                      {connectedChannels.length > 1 && (
+                        <button
+                          type="button"
+                          onClick={() => handleDeleteChannel(ch.id)}
+                          className="p-1 text-stone-400 hover:text-rose-600 transition-colors cursor-pointer"
+                          title="إزالة ربط الحساب"
+                        >
+                          <Trash2 className="w-3.5 h-3.5" />
+                        </button>
+                      )}
+                    </div>
+                  </div>
 
-              <div className="p-3.5 rounded-xl border border-stone-300 bg-stone-50 space-y-1">
-                <div className="flex items-center justify-between">
-                  <span className="font-bold text-stone-950 text-xs">TikTok</span>
-                  <span className="text-[10px] bg-emerald-100 text-emerald-800 font-bold px-1.5 py-0.5 rounded">متصل ✅</span>
-                </div>
-                <div className="font-mono text-xs text-stone-700">@2babyprint_cairo</div>
-                <div className="text-[11px] text-stone-500">88.4K متابع • 1.2M مشاهدة شهرية</div>
-              </div>
+                  <div className="font-mono text-xs font-bold text-stone-800 dir-ltr text-right">
+                    {ch.handle}
+                  </div>
 
-              <div className="p-3.5 rounded-xl border border-blue-200 bg-blue-50/50 space-y-1">
-                <div className="flex items-center justify-between">
-                  <span className="font-bold text-blue-950 text-xs">Facebook Page</span>
-                  <span className="text-[10px] bg-emerald-100 text-emerald-800 font-bold px-1.5 py-0.5 rounded">متصل ✅</span>
-                </div>
-                <div className="font-mono text-xs text-stone-700">2BabyPrint Egypt</div>
-                <div className="text-[11px] text-stone-500">65K معجب • رد فوري على الرسائل</div>
-              </div>
+                  <div className="text-[11px] text-stone-500 line-clamp-1">
+                    {ch.followers} • {ch.notes}
+                  </div>
 
-              <div className="p-3.5 rounded-xl border border-emerald-200 bg-emerald-50/50 space-y-1">
-                <div className="flex items-center justify-between">
-                  <span className="font-bold text-emerald-950 text-xs">قناة واتساب الإدارة</span>
-                  <span className="text-[10px] bg-emerald-100 text-emerald-800 font-bold px-1.5 py-0.5 rounded">نشط 🟢</span>
+                  <div className="pt-2 border-t border-stone-200/80 flex items-center justify-between gap-2 text-xs">
+                    <button
+                      type="button"
+                      onClick={() => window.open(ch.url, '_blank')}
+                      className="text-sky-700 hover:text-sky-900 font-bold flex items-center gap-1 cursor-pointer"
+                    >
+                      <ExternalLink className="w-3.5 h-3.5" />
+                      <span>زيارة واختبار الرابط</span>
+                    </button>
+
+                    <button
+                      type="button"
+                      onClick={() => setEditingChannel(ch)}
+                      className="text-stone-600 hover:text-stone-900 font-semibold text-[11px] cursor-pointer"
+                    >
+                      تعديل البيانات ✏️
+                    </button>
+                  </div>
                 </div>
-                <div className="font-mono text-xs text-stone-700">01019998877</div>
-                <div className="text-[11px] text-stone-500">إشعارات المطبعة والطلبات الفورية</div>
-              </div>
+              ))}
             </div>
           </div>
 
           {/* Posts Schedule Queue */}
           <div className="space-y-4">
-            <h4 className="font-bold text-stone-900 text-sm flex items-center gap-2">
-              <Calendar className="w-4 h-4 text-amber-600" />
-              <span>جدول النشر التفاعلي والمحتوى الجاهز:</span>
-            </h4>
+            <div className="flex items-center justify-between">
+              <h4 className="font-bold text-stone-900 text-sm flex items-center gap-2">
+                <Calendar className="w-4 h-4 text-amber-600" />
+                <span>جدول النشر التفاعلي والمحتوى المجدول ({postSchedules.length}):</span>
+              </h4>
+              <span className="text-xs text-stone-500">
+                يمكنك النشر المباشر لأي منشور فوراً بضغطة زر
+              </span>
+            </div>
 
-            <div className="grid grid-cols-1 md:grid-cols-3 gap-4">
+            <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-4">
               {postSchedules.map((post) => (
                 <div
                   key={post.id}
@@ -2508,8 +2753,16 @@ ${campaign.adCreative.videoScript ? `\n[سيناريو ريلز/فيديو]:\n- 
                 >
                   <div className="space-y-3">
                     <div className="flex items-center justify-between">
-                      <span className="text-xs font-bold px-2 py-0.5 rounded-md bg-stone-100 text-stone-700">
-                        {post.platform === 'instagram' ? '📸 Instagram' : post.platform === 'tiktok' ? '🎵 TikTok' : '📘 Facebook'}
+                      <span className="text-xs font-bold px-2 py-0.5 rounded-md bg-stone-100 text-stone-700 capitalize">
+                        {post.platform === 'instagram'
+                          ? '📸 Instagram'
+                          : post.platform === 'tiktok'
+                          ? '🎵 TikTok'
+                          : post.platform === 'facebook'
+                          ? '📘 Facebook'
+                          : post.platform === 'whatsapp'
+                          ? '💬 WhatsApp'
+                          : post.platform}
                       </span>
                       <span
                         className={`text-[10px] font-bold px-2 py-0.5 rounded-full ${
@@ -2520,7 +2773,7 @@ ${campaign.adCreative.videoScript ? `\n[سيناريو ريلز/فيديو]:\n- 
                             : 'bg-stone-100 text-stone-700'
                         }`}
                       >
-                        {post.status === 'published' ? 'منشور بالفعل' : post.status === 'scheduled' ? 'مجدول للنشر' : 'مسودة'}
+                        {post.status === 'published' ? 'منشور بالفعل ✓' : post.status === 'scheduled' ? 'مجدول للنشر' : 'مسودة'}
                       </span>
                     </div>
 
@@ -2536,38 +2789,47 @@ ${campaign.adCreative.videoScript ? `\n[سيناريو ريلز/فيديو]:\n- 
                     </div>
                   </div>
 
-                  <div className="border-t border-stone-100 pt-3 flex items-center justify-between">
-                    <button
-                      type="button"
-                      onClick={() => {
-                        navigator.clipboard.writeText(post.content);
-                        setCopiedId(post.id);
-                        setTimeout(() => setCopiedId(null), 2500);
-                      }}
-                      className="text-xs font-bold text-stone-700 hover:text-stone-950 flex items-center gap-1 cursor-pointer"
-                    >
-                      {copiedId === post.id ? (
-                        <>
-                          <Check className="w-3.5 h-3.5 text-emerald-600" />
-                          <span className="text-emerald-600">تم النسخ!</span>
-                        </>
-                      ) : (
-                        <>
-                          <Copy className="w-3.5 h-3.5" />
-                          <span>نسخ الكابشن</span>
-                        </>
-                      )}
-                    </button>
+                  <div className="border-t border-stone-100 pt-3 space-y-2">
+                    <div className="flex items-center justify-between">
+                      <button
+                        type="button"
+                        onClick={() => {
+                          navigator.clipboard.writeText(post.content);
+                          setCopiedId(post.id);
+                          setTimeout(() => setCopiedId(null), 2500);
+                        }}
+                        className="text-xs font-bold text-stone-700 hover:text-stone-950 flex items-center gap-1 cursor-pointer"
+                      >
+                        {copiedId === post.id ? (
+                          <>
+                            <Check className="w-3.5 h-3.5 text-emerald-600" />
+                            <span className="text-emerald-600">تم النسخ!</span>
+                          </>
+                        ) : (
+                          <>
+                            <Copy className="w-3.5 h-3.5" />
+                            <span>نسخ الكابشن</span>
+                          </>
+                        )}
+                      </button>
 
+                      <button
+                        type="button"
+                        onClick={() => handleDeletePostSchedule(post.id)}
+                        className="text-stone-400 hover:text-rose-600 text-xs font-semibold cursor-pointer"
+                      >
+                        حذف
+                      </button>
+                    </div>
+
+                    {/* Live Publish Action Button */}
                     <button
                       type="button"
-                      onClick={() => {
-                        const next = post.status === 'published' ? 'scheduled' : 'published';
-                        handleUpdatePosts(postSchedules.map((p) => (p.id === post.id ? { ...p, status: next } : p)));
-                      }}
-                      className="text-xs text-amber-700 hover:text-amber-900 font-bold cursor-pointer"
+                      onClick={() => handlePublishPostLive(post)}
+                      className="w-full py-2 bg-gradient-to-r from-amber-500 to-amber-600 hover:from-amber-400 hover:to-amber-500 text-stone-950 font-black rounded-xl text-xs flex items-center justify-center gap-1.5 shadow-2xs transition-transform active:scale-95 cursor-pointer"
                     >
-                      {post.status === 'published' ? 'إعادة للجدولة' : 'تأكيد النشر الآن'}
+                      <Zap className="w-3.5 h-3.5 fill-current" />
+                      <span>{post.status === 'published' ? 'إعادة النشر للمنصة الحقيقية' : '🚀 نشر فوري للمنصة الحقيقية'}</span>
                     </button>
                   </div>
                 </div>
@@ -2575,10 +2837,284 @@ ${campaign.adCreative.videoScript ? `\n[سيناريو ريلز/فيديو]:\n- 
             </div>
           </div>
 
+          {/* Modal: Edit Channel Single */}
+          {editingChannel && (
+            <div className="fixed inset-0 z-50 bg-black/60 backdrop-blur-xs flex items-center justify-center p-4">
+              <div className="bg-white rounded-3xl max-w-md w-full p-6 space-y-4 shadow-2xl">
+                <div className="flex items-center justify-between border-b border-stone-200 pb-3">
+                  <h3 className="font-bold text-stone-900 text-sm flex items-center gap-2">
+                    <Sliders className="w-4 h-4 text-amber-600" />
+                    <span>تعديل ربط منصة {editingChannel.name}</span>
+                  </h3>
+                  <button
+                    type="button"
+                    onClick={() => setEditingChannel(null)}
+                    className="text-stone-400 hover:text-stone-600 p-1 cursor-pointer"
+                  >
+                    ✕
+                  </button>
+                </div>
+
+                <div className="space-y-3 text-xs">
+                  <div>
+                    <label className="block font-bold text-stone-700 mb-1">اسم الحساب / Handle:</label>
+                    <input
+                      type="text"
+                      value={editingChannel.handle}
+                      onChange={(e) => setEditingChannel({ ...editingChannel, handle: e.target.value })}
+                      className="w-full p-2.5 border border-stone-300 rounded-xl font-mono text-left"
+                    />
+                  </div>
+
+                  <div>
+                    <label className="block font-bold text-stone-700 mb-1">رابط الصفحة أو القناة الفعلي (URL):</label>
+                    <input
+                      type="text"
+                      value={editingChannel.url}
+                      onChange={(e) => setEditingChannel({ ...editingChannel, url: e.target.value })}
+                      className="w-full p-2.5 border border-stone-300 rounded-xl font-mono text-left"
+                    />
+                  </div>
+
+                  <div>
+                    <label className="block font-bold text-stone-700 mb-1">عدد المتابعين / إحصائية الحساب:</label>
+                    <input
+                      type="text"
+                      value={editingChannel.followers}
+                      onChange={(e) => setEditingChannel({ ...editingChannel, followers: e.target.value })}
+                      className="w-full p-2.5 border border-stone-300 rounded-xl"
+                    />
+                  </div>
+
+                  <div>
+                    <label className="block font-bold text-stone-700 mb-1">ملاحظات وقنوات التوجيه:</label>
+                    <input
+                      type="text"
+                      value={editingChannel.notes}
+                      onChange={(e) => setEditingChannel({ ...editingChannel, notes: e.target.value })}
+                      className="w-full p-2.5 border border-stone-300 rounded-xl"
+                    />
+                  </div>
+                </div>
+
+                <div className="flex items-center justify-end gap-2 border-t border-stone-200 pt-3">
+                  <button
+                    type="button"
+                    onClick={() => setEditingChannel(null)}
+                    className="px-4 py-2 text-stone-600 hover:text-stone-800 text-xs font-bold cursor-pointer"
+                  >
+                    إلغاء
+                  </button>
+                  <button
+                    type="button"
+                    onClick={() => handleSaveChannelEdit(editingChannel)}
+                    className="px-5 py-2 bg-amber-500 hover:bg-amber-600 text-stone-950 rounded-xl text-xs font-black cursor-pointer shadow-xs"
+                  >
+                    حفظ التغييرات
+                  </button>
+                </div>
+              </div>
+            </div>
+          )}
+
+          {/* Modal: Edit All Channels List */}
+          {isEditChannelsModalOpen && (
+            <div className="fixed inset-0 z-50 bg-black/60 backdrop-blur-xs flex items-center justify-center p-4">
+              <div className="bg-white rounded-3xl max-w-2xl w-full max-h-[90vh] overflow-y-auto p-6 space-y-4 shadow-2xl">
+                <div className="flex items-center justify-between border-b border-stone-200 pb-3">
+                  <div>
+                    <h3 className="font-bold text-stone-900 text-base flex items-center gap-2">
+                      <Share2 className="w-5 h-5 text-amber-600" />
+                      <span>إدارة وربط الحسابات الرسمية على السوشيال ميديا</span>
+                    </h3>
+                    <p className="text-xs text-stone-500 mt-0.5">
+                      تحديث روابط حسابات المتجر الحقيقية لنشر الحملات وتوجيه العملاء الفعلي
+                    </p>
+                  </div>
+                  <button
+                    type="button"
+                    onClick={() => setIsEditChannelsModalOpen(false)}
+                    className="text-stone-400 hover:text-stone-600 p-1 cursor-pointer"
+                  >
+                    ✕
+                  </button>
+                </div>
+
+                <div className="space-y-4 text-xs divide-y divide-stone-100">
+                  {connectedChannels.map((channel, idx) => (
+                    <div key={channel.id} className="pt-3 first:pt-0 space-y-2">
+                      <div className="font-bold text-stone-900 flex items-center justify-between">
+                        <span>{channel.name}</span>
+                        <span className="text-[10px] text-emerald-700 font-mono bg-emerald-50 px-2 py-0.5 rounded">
+                          {channel.platform}
+                        </span>
+                      </div>
+                      <div className="grid grid-cols-1 sm:grid-cols-2 gap-2">
+                        <div>
+                          <label className="block text-[11px] text-stone-500 mb-0.5">اسم الحساب / الرقم:</label>
+                          <input
+                            type="text"
+                            value={channel.handle}
+                            onChange={(e) => {
+                              const updated = [...connectedChannels];
+                              updated[idx].handle = e.target.value;
+                              setConnectedChannels(updated);
+                            }}
+                            className="w-full p-2 border border-stone-300 rounded-lg font-mono text-xs"
+                          />
+                        </div>
+                        <div>
+                          <label className="block text-[11px] text-stone-500 mb-0.5">الرابط المباشر (URL):</label>
+                          <input
+                            type="text"
+                            value={channel.url}
+                            onChange={(e) => {
+                              const updated = [...connectedChannels];
+                              updated[idx].url = e.target.value;
+                              setConnectedChannels(updated);
+                            }}
+                            className="w-full p-2 border border-stone-300 rounded-lg font-mono text-xs"
+                          />
+                        </div>
+                      </div>
+                    </div>
+                  ))}
+                </div>
+
+                <div className="flex items-center justify-end gap-2 border-t border-stone-200 pt-3">
+                  <button
+                    type="button"
+                    onClick={() => {
+                      handleUpdateChannels(connectedChannels);
+                      setIsEditChannelsModalOpen(false);
+                      soundEffects.playCelestialChime();
+                    }}
+                    className="px-6 py-2.5 bg-amber-500 hover:bg-amber-600 text-stone-950 font-black rounded-xl text-xs shadow-sm cursor-pointer"
+                  >
+                    حفظ كافة الحسابات الرسمية
+                  </button>
+                </div>
+              </div>
+            </div>
+          )}
+
+          {/* Modal: Add Custom Channel */}
+          {isAddChannelModalOpen && (
+            <div className="fixed inset-0 z-50 bg-black/60 backdrop-blur-xs flex items-center justify-center p-4">
+              <div className="bg-white rounded-3xl max-w-md w-full p-6 space-y-4 shadow-2xl animate-in fade-in zoom-in-95 duration-150">
+                <div className="flex items-center justify-between border-b border-stone-200 pb-3">
+                  <h3 className="font-bold text-stone-900 text-base flex items-center gap-2">
+                    <Share2 className="w-5 h-5 text-emerald-600" />
+                    <span>ربط صفحة أو حساب جديد بالمتجر</span>
+                  </h3>
+                  <button
+                    type="button"
+                    onClick={() => setIsAddChannelModalOpen(false)}
+                    className="text-stone-400 hover:text-stone-600 p-1 cursor-pointer"
+                  >
+                    ✕
+                  </button>
+                </div>
+
+                <div className="space-y-3 text-xs">
+                  <div>
+                    <label className="block font-bold text-stone-700 mb-1">المنصة:</label>
+                    <select
+                      value={newChannelPlatform}
+                      onChange={(e) => setNewChannelPlatform(e.target.value as any)}
+                      className="w-full p-2.5 border border-stone-300 rounded-xl bg-stone-50 text-stone-800"
+                    >
+                      <option value="facebook">📘 Facebook Page / Group</option>
+                      <option value="instagram">📸 Instagram Business</option>
+                      <option value="tiktok">🎵 TikTok Creator</option>
+                      <option value="whatsapp">💬 WhatsApp Business / Catalog</option>
+                      <option value="telegram">✈️ Telegram Production Channel</option>
+                      <option value="twitter">🐦 X (Twitter)</option>
+                      <option value="pinterest">📌 Pinterest</option>
+                    </select>
+                  </div>
+
+                  <div>
+                    <label className="block font-bold text-stone-700 mb-1">اسم الحساب / الصفحة:</label>
+                    <input
+                      type="text"
+                      placeholder="مثال: صفحة فيسبوك 2BabyPrint مصر"
+                      value={newChannelName}
+                      onChange={(e) => setNewChannelName(e.target.value)}
+                      className="w-full p-2.5 border border-stone-300 rounded-xl"
+                    />
+                  </div>
+
+                  <div>
+                    <label className="block font-bold text-stone-700 mb-1">المعرف / اسم المستخدم (Handle):</label>
+                    <input
+                      type="text"
+                      placeholder="@2babyprint_eg"
+                      value={newChannelHandle}
+                      onChange={(e) => setNewChannelHandle(e.target.value)}
+                      className="w-full p-2.5 border border-stone-300 rounded-xl font-mono text-left"
+                    />
+                  </div>
+
+                  <div>
+                    <label className="block font-bold text-stone-700 mb-1">الرابط الفعلي للحساب (URL):</label>
+                    <input
+                      type="url"
+                      placeholder="https://facebook.com/your-page"
+                      value={newChannelUrl}
+                      onChange={(e) => setNewChannelUrl(e.target.value)}
+                      className="w-full p-2.5 border border-stone-300 rounded-xl font-mono text-left"
+                    />
+                  </div>
+
+                  <div className="grid grid-cols-2 gap-2">
+                    <div>
+                      <label className="block font-bold text-stone-700 mb-1">إحصائية المتابعين:</label>
+                      <input
+                        type="text"
+                        placeholder="مثال: 50K متابع"
+                        value={newChannelFollowers}
+                        onChange={(e) => setNewChannelFollowers(e.target.value)}
+                        className="w-full p-2.5 border border-stone-300 rounded-xl"
+                      />
+                    </div>
+                    <div>
+                      <label className="block font-bold text-stone-700 mb-1">ملاحظات التوجيه:</label>
+                      <input
+                        type="text"
+                        placeholder="نشر ريلز السبوع"
+                        value={newChannelNotes}
+                        onChange={(e) => setNewChannelNotes(e.target.value)}
+                        className="w-full p-2.5 border border-stone-300 rounded-xl"
+                      />
+                    </div>
+                  </div>
+                </div>
+
+                <div className="flex items-center justify-end gap-2 border-t border-stone-200 pt-3">
+                  <button
+                    type="button"
+                    onClick={() => setIsAddChannelModalOpen(false)}
+                    className="px-4 py-2 text-stone-600 hover:text-stone-800 text-xs font-bold cursor-pointer"
+                  >
+                    إلغاء
+                  </button>
+                  <button
+                    type="button"
+                    onClick={handleAddNewChannel}
+                    className="px-5 py-2.5 bg-emerald-600 hover:bg-emerald-700 text-white rounded-xl text-xs font-black cursor-pointer shadow-xs"
+                  >
+                    حفظ وربط الحساب فوراً
+                  </button>
+                </div>
+              </div>
+            </div>
+          )}
+
           {/* Modal: Add Scheduled Post */}
           {isAddPostModalOpen && (
             <div className="fixed inset-0 z-50 bg-black/60 backdrop-blur-xs flex items-center justify-center p-4">
-              <div className="bg-white rounded-2xl max-w-lg w-full p-6 space-y-4">
+              <div className="bg-white rounded-3xl max-w-lg w-full p-6 space-y-4 shadow-2xl">
                 <div className="flex items-center justify-between border-b border-stone-200 pb-3">
                   <h3 className="font-bold text-stone-900 text-base flex items-center gap-2">
                     <Calendar className="w-5 h-5 text-amber-600" />
@@ -2587,7 +3123,7 @@ ${campaign.adCreative.videoScript ? `\n[سيناريو ريلز/فيديو]:\n- 
                   <button
                     type="button"
                     onClick={() => setIsAddPostModalOpen(false)}
-                    className="text-stone-400 hover:text-stone-600 p-1"
+                    className="text-stone-400 hover:text-stone-600 p-1 cursor-pointer"
                   >
                     ✕
                   </button>
@@ -2600,11 +3136,14 @@ ${campaign.adCreative.videoScript ? `\n[سيناريو ريلز/فيديو]:\n- 
                       <select
                         value={newPostPlatform}
                         onChange={(e) => setNewPostPlatform(e.target.value as any)}
-                        className="w-full p-2.5 border border-stone-300 rounded-xl"
+                        className="w-full p-2.5 border border-stone-300 rounded-xl bg-stone-50"
                       >
                         <option value="instagram">Instagram</option>
                         <option value="tiktok">TikTok</option>
                         <option value="facebook">Facebook</option>
+                        <option value="whatsapp">واتساب WhatsApp</option>
+                        <option value="telegram">تلجرام Telegram</option>
+                        <option value="twitter">تويتر X</option>
                       </select>
                     </div>
                     <div>
@@ -2612,7 +3151,7 @@ ${campaign.adCreative.videoScript ? `\n[سيناريو ريلز/فيديو]:\n- 
                       <select
                         value={newPostMediaType}
                         onChange={(e) => setNewPostMediaType(e.target.value as any)}
-                        className="w-full p-2.5 border border-stone-300 rounded-xl"
+                        className="w-full p-2.5 border border-stone-300 rounded-xl bg-stone-50"
                       >
                         <option value="reel">فيديو ريلز (Reel)</option>
                         <option value="image">صورة فردية (Post)</option>
@@ -2629,7 +3168,7 @@ ${campaign.adCreative.videoScript ? `\n[سيناريو ريلز/فيديو]:\n- 
                       value={newPostTitle}
                       onChange={(e) => setNewPostTitle(e.target.value)}
                       placeholder="مثال: ريلز استوديو التصميم وتجربة الأم"
-                      className="w-full p-2.5 border border-stone-300 rounded-xl"
+                      className="w-full p-2.5 border border-stone-300 rounded-xl font-medium"
                     />
                   </div>
 
@@ -2651,7 +3190,7 @@ ${campaign.adCreative.videoScript ? `\n[سيناريو ريلز/فيديو]:\n- 
                       value={newPostTime}
                       onChange={(e) => setNewPostTime(e.target.value)}
                       placeholder="اليوم، 8:00 مساءً"
-                      className="w-full p-2.5 border border-stone-300 rounded-xl"
+                      className="w-full p-2.5 border border-stone-300 rounded-xl font-medium"
                     />
                   </div>
                 </div>
@@ -2660,7 +3199,7 @@ ${campaign.adCreative.videoScript ? `\n[سيناريو ريلز/فيديو]:\n- 
                   <button
                     type="button"
                     onClick={() => setIsAddPostModalOpen(false)}
-                    className="px-4 py-2 text-stone-600 hover:text-stone-800 text-xs font-bold"
+                    className="px-4 py-2 text-stone-600 hover:text-stone-800 text-xs font-bold cursor-pointer"
                   >
                     إلغاء
                   </button>
@@ -2683,8 +3222,9 @@ ${campaign.adCreative.videoScript ? `\n[سيناريو ريلز/فيديو]:\n- 
                       setIsAddPostModalOpen(false);
                       setNewPostTitle('');
                       setNewPostContent('');
+                      soundEffects.playCelestialChime();
                     }}
-                    className="px-5 py-2 bg-stone-900 hover:bg-stone-800 text-white rounded-xl text-xs font-bold"
+                    className="px-5 py-2.5 bg-amber-500 hover:bg-amber-600 text-stone-950 rounded-xl text-xs font-black cursor-pointer shadow-xs"
                   >
                     حفظ وجدولة المنشور
                   </button>

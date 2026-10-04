@@ -415,7 +415,16 @@ export type EnglishFontFamily =
   | 'Playfair Display';
 
 // Social Media & AI Ads Campaign Types
-export type SocialPlatform = 'instagram' | 'facebook' | 'tiktok' | 'snapchat' | 'google' | 'pinterest';
+export type SocialPlatform =
+  | 'instagram'
+  | 'facebook'
+  | 'tiktok'
+  | 'snapchat'
+  | 'google'
+  | 'pinterest'
+  | 'whatsapp'
+  | 'telegram'
+  | 'twitter';
 
 export type CampaignGoal =
   | 'custom_studio' // الترويج لاستوديو التصميم الحي وتجربة العميل

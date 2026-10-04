@@ -31,11 +31,18 @@ import { OrderDetails, Product } from '../../types';
 interface AnalyticsDashboardProps {
   orders: OrderDetails[];
   products: Product[];
+  displayMode?: 'standard' | 'projector';
 }
 
-export const AnalyticsDashboard: React.FC<AnalyticsDashboardProps> = ({ orders, products }) => {
+export const AnalyticsDashboard: React.FC<AnalyticsDashboardProps> = ({
+  orders,
+  products,
+  displayMode = 'standard',
+}) => {
   const [salesTimeframe, setSalesTimeframe] = useState<'daily' | 'monthly'>('daily');
   const [activeChartMetric, setActiveChartMetric] = useState<'revenue' | 'orders'>('revenue');
+
+  const isProjector = displayMode === 'projector';
 
   // KPI Calculations
   const totalRevenue = useMemo(() => orders.reduce((sum, o) => sum + o.total, 0), [orders]);
@@ -358,7 +365,7 @@ export const AnalyticsDashboard: React.FC<AnalyticsDashboardProps> = ({ orders, 
           </div>
 
           {/* Recharts Area / Bar Chart */}
-          <div className="h-72 w-full pt-2" dir="ltr">
+          <div className={`${isProjector ? 'h-96 md:h-[430px]' : 'h-72'} w-full pt-2`} dir="ltr">
             <ResponsiveContainer width="100%" height="100%">
               {salesTimeframe === 'daily' ? (
                 <AreaChart data={dailySalesData} margin={{ top: 10, right: 10, left: 0, bottom: 0 }}>
@@ -376,13 +383,13 @@ export const AnalyticsDashboard: React.FC<AnalyticsDashboardProps> = ({ orders, 
                   <XAxis
                     dataKey="day"
                     stroke="#94a3b8"
-                    fontSize={11}
+                    fontSize={isProjector ? 14 : 11}
                     tickLine={false}
                     axisLine={{ stroke: '#e2e8f0' }}
                   />
                   <YAxis
                     stroke="#94a3b8"
-                    fontSize={11}
+                    fontSize={isProjector ? 14 : 11}
                     tickLine={false}
                     axisLine={false}
                     tickFormatter={(val) => (activeChartMetric === 'revenue' ? `${val} ج.م` : `${val}`)}
@@ -440,13 +447,13 @@ export const AnalyticsDashboard: React.FC<AnalyticsDashboardProps> = ({ orders, 
                   <XAxis
                     dataKey="month"
                     stroke="#94a3b8"
-                    fontSize={11}
+                    fontSize={isProjector ? 14 : 11}
                     tickLine={false}
                     axisLine={{ stroke: '#e2e8f0' }}
                   />
                   <YAxis
                     stroke="#94a3b8"
-                    fontSize={11}
+                    fontSize={isProjector ? 14 : 11}
                     tickLine={false}
                     axisLine={false}
                     tickFormatter={(val) => (activeChartMetric === 'revenue' ? `${val / 1000}k` : `${val}`)}
@@ -528,7 +535,7 @@ export const AnalyticsDashboard: React.FC<AnalyticsDashboardProps> = ({ orders, 
             </div>
 
             {/* Recharts Pie Chart (Donut style) */}
-            <div className="h-48 w-full relative my-2" dir="ltr">
+            <div className={`${isProjector ? 'h-60' : 'h-48'} w-full relative my-2`} dir="ltr">
               <ResponsiveContainer width="100%" height="100%">
                 <PieChart>
                   <Tooltip
@@ -553,8 +560,8 @@ export const AnalyticsDashboard: React.FC<AnalyticsDashboardProps> = ({ orders, 
                     data={orderStatusData}
                     cx="50%"
                     cy="50%"
-                    innerRadius={50}
-                    outerRadius={75}
+                    innerRadius={isProjector ? 62 : 50}
+                    outerRadius={isProjector ? 92 : 75}
                     paddingAngle={3}
                     dataKey="value"
                   >

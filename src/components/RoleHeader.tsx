@@ -37,7 +37,7 @@ export const RoleHeader: React.FC<RoleHeaderProps> = ({
             <span>{lang === 'ar' ? 'جلسة فريق العمل والإدارة النشطة' : 'Staff Operations Mode'}</span>
           </div>
 
-          <div className="flex items-center gap-1">
+          <div className="flex items-center gap-1 flex-wrap">
             {/* 1. Admin Dashboard */}
             <button
               type="button"

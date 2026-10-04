@@ -102,6 +102,22 @@ export const AdminDashboard: React.FC<AdminDashboardProps> = ({
   const [orderFilter, setOrderFilter] = useState<string>('all');
   const [selectedOrderDetails, setSelectedOrderDetails] = useState<OrderDetails | null>(null);
 
+  // Screen Display Mode ('standard' | 'projector')
+  const [displayMode, setDisplayMode] = useState<'standard' | 'projector'>('standard');
+  const [isFullscreen, setIsFullscreen] = useState(false);
+
+  const toggleFullscreen = () => {
+    if (!document.fullscreenElement) {
+      document.documentElement.requestFullscreen().catch(() => {});
+      setIsFullscreen(true);
+    } else {
+      if (document.exitFullscreen) {
+        document.exitFullscreen().catch(() => {});
+      }
+      setIsFullscreen(false);
+    }
+  };
+
   // Product Editing Modal State
   const [editingProduct, setEditingProduct] = useState<Product | null>(null);
   const [editGalleryInput, setEditGalleryInput] = useState('');
@@ -484,31 +500,90 @@ ${order.notes ? `\n📝 *ملاحظات:* ${order.notes}` : ''}
   };
 
   return (
-    <div className="min-h-screen bg-stone-100/90 py-8 px-4 sm:px-6 font-['Cairo']">
-      <div className="max-w-7xl mx-auto space-y-6">
+    <div
+      className={`min-h-screen font-['Cairo'] transition-all ${
+        displayMode === 'projector'
+          ? 'bg-stone-950 text-stone-100 py-6 px-3 lg:px-8 text-base'
+          : 'bg-stone-100/90 py-8 px-4 sm:px-6'
+      }`}
+    >
+      <div
+        className={`${
+          displayMode === 'projector' ? 'w-full max-w-none space-y-6' : 'max-w-7xl mx-auto space-y-6'
+        }`}
+      >
         {/* Dashboard Master Top Bar */}
-        <div className="bg-white p-6 rounded-2xl border border-stone-200/90 shadow-xs flex flex-col lg:flex-row lg:items-center justify-between gap-4 relative">
+        <div
+          className={`p-6 rounded-3xl border shadow-xs flex flex-col lg:flex-row lg:items-center justify-between gap-4 relative transition-colors ${
+            displayMode === 'projector'
+              ? 'bg-stone-900 border-stone-700 text-white'
+              : 'bg-white border-stone-200/90'
+          }`}
+        >
           <div>
-            <div className="flex items-center gap-2">
-              <h1 className="text-xl font-bold text-stone-900">
+            <div className="flex flex-wrap items-center gap-2">
+              <h1 className="text-xl sm:text-2xl font-black text-stone-900 dark:text-white">
                 لوحة الإدارة الشاملة لمتجر 2BabyPrint (القاهرة)
               </h1>
-              <span className="text-xs bg-amber-100 text-amber-900 font-bold px-2 py-0.5 rounded">
+              <span className="text-xs bg-amber-100 text-amber-900 font-black px-2.5 py-0.5 rounded-full">
                 إدارة المتجر والإنتاج
               </span>
+              {displayMode === 'projector' && (
+                <span className="text-xs bg-purple-500/20 text-purple-300 border border-purple-500/50 font-black px-2.5 py-0.5 rounded-full">
+                  📽️ وضع البروجكتور والشاشات الكبيرة
+                </span>
+              )}
             </div>
-            <p className="text-xs text-stone-500 mt-1">
+            <p className="text-xs text-stone-500 dark:text-stone-400 mt-1">
               تحكم كامل في المنتجات والصور، ترتيب وتوزيعة الموقع، الأسعار والمقاسات، ومتابعة الطلبات بدقة للمطبعة والتوصيل
             </p>
           </div>
 
-          {/* Quick Actions & Notification Bell */}
-          <div className="flex items-center gap-3">
+          {/* Quick Actions, Display Mode & Notification Bell */}
+          <div className="flex flex-wrap items-center gap-2.5">
+            {/* Display Mode / Projector & Device Optimization Toggle */}
+            <div className="bg-stone-100 dark:bg-stone-800 p-1 rounded-2xl flex items-center border border-stone-200 dark:border-stone-700 text-xs">
+              <button
+                type="button"
+                onClick={() => setDisplayMode('standard')}
+                className={`px-3 py-1.5 rounded-xl font-bold flex items-center gap-1.5 transition-all cursor-pointer ${
+                  displayMode === 'standard'
+                    ? 'bg-white dark:bg-stone-900 text-stone-950 dark:text-white shadow-xs'
+                    : 'text-stone-600 dark:text-stone-400 hover:text-stone-900'
+                }`}
+                title="العرض المكتبي القياسي للابتوب والكمبيوتر"
+              >
+                <span>💻 عادي</span>
+              </button>
+
+              <button
+                type="button"
+                onClick={() => setDisplayMode('projector')}
+                className={`px-3 py-1.5 rounded-xl font-bold flex items-center gap-1.5 transition-all cursor-pointer ${
+                  displayMode === 'projector'
+                    ? 'bg-amber-500 text-stone-950 shadow-xs'
+                    : 'text-stone-600 dark:text-stone-400 hover:text-stone-900'
+                }`}
+                title="تفعيل وضع العرض على البروجكتور والشاشات الكبيرة بحجم خطوط أكبر وتباين عالٍ"
+              >
+                <span>📽️ بروجكتور / شاشة كبيرة</span>
+              </button>
+
+              <button
+                type="button"
+                onClick={toggleFullscreen}
+                className="px-2.5 py-1.5 rounded-xl text-stone-600 dark:text-stone-300 hover:text-stone-900 dark:hover:text-white font-bold transition-all cursor-pointer"
+                title="تبديل وضع ملء الشاشة"
+              >
+                <span>{isFullscreen ? '⤓ خروج' : '⛶ ملء الشاشة'}</span>
+              </button>
+            </div>
+
             <div className="relative">
               <button
                 type="button"
                 onClick={() => setIsNotifOpen(!isNotifOpen)}
-                className="relative p-2.5 bg-stone-100 hover:bg-stone-200 text-stone-700 rounded-xl transition-colors cursor-pointer"
+                className="relative p-2.5 bg-stone-100 dark:bg-stone-800 hover:bg-stone-200 dark:hover:bg-stone-700 text-stone-700 dark:text-stone-200 rounded-xl transition-colors cursor-pointer"
                 title="مركز الإشعارات والتنبيهات"
               >
                 <Bell className="w-5 h-5" />
@@ -521,7 +596,7 @@ ${order.notes ? `\n📝 *ملاحظات:* ${order.notes}` : ''}
 
               {/* Notifications Dropdown */}
               {isNotifOpen && (
-                <div className="absolute left-0 sm:right-auto sm:left-0 top-12 z-50 w-80 sm:w-96 bg-white rounded-2xl border border-stone-200 shadow-2xl p-4 space-y-3 animate-in fade-in zoom-in-95 duration-150">
+                <div className="absolute left-0 sm:right-auto sm:left-0 top-12 z-50 w-80 sm:w-96 bg-white rounded-2xl border border-stone-200 shadow-2xl p-4 space-y-3 animate-in fade-in zoom-in-95 duration-150 text-stone-900">
                   <div className="flex items-center justify-between border-b border-stone-100 pb-2">
                     <span className="font-bold text-xs text-stone-900">إشعارات الإدارة والطلبات الجديدة</span>
                     <button
@@ -570,9 +645,32 @@ ${order.notes ? `\n📝 *ملاحظات:* ${order.notes}` : ''}
               )}
             </div>
           </div>
+        </div>
 
-          {/* Navigation Tabs */}
-          <div className="flex items-center gap-1.5 p-1 bg-stone-100 rounded-xl overflow-x-auto">
+        {/* Navigation Tabs Area */}
+        <div className="space-y-2">
+          {/* Mobile Fast Tab Selector Dropdown (< lg screens) */}
+          <div className="lg:hidden w-full">
+            <label className="block text-[11px] font-bold text-stone-500 mb-1">
+              الانتقال السريع بين أقسام لوحة الإدارة:
+            </label>
+            <select
+              value={activeTab}
+              onChange={(e) => setActiveTab(e.target.value as any)}
+              className="w-full bg-white dark:bg-stone-900 border border-stone-300 dark:border-stone-700 rounded-xl px-3 py-2.5 text-xs font-bold text-stone-900 dark:text-stone-100 shadow-2xs"
+            >
+              <option value="overview">📊 نظرة عامة وإحصائيات المبيعات الحية</option>
+              <option value="orders">📦 إدارة ومتابعة الطلبات ({orders.length})</option>
+              <option value="products">👕 المنتجات والصور والترتيب ({products.length})</option>
+              <option value="layout">🎨 محرر وتخصيص واجهة المتجر (CMS)</option>
+              <option value="categories">📁 تصنيفات وأقسام المتجر ({allCategories.length})</option>
+              <option value="coupons">🏷️ كوبونات الخصم والعروض ({coupons.length})</option>
+              <option value="marketing">📢 الإعلانات والحملات الذكية ({campaigns.length})</option>
+            </select>
+          </div>
+
+          {/* Desktop & Scrollable Tablet/Mobile Tabs */}
+          <div className="flex items-center gap-1.5 p-1 bg-stone-100 dark:bg-stone-800 rounded-2xl overflow-x-auto scrollbar-none py-1.5 touch-pan-x w-full">
             <button
               type="button"
               onClick={() => setActiveTab('overview')}
@@ -661,11 +759,35 @@ ${order.notes ? `\n📝 *ملاحظات:* ${order.notes}` : ''}
           </div>
         </div>
 
+        {/* Projector / Big Screen Presentation Notice */}
+        {displayMode === 'projector' && (
+          <div className="bg-gradient-to-r from-purple-950 via-stone-900 to-amber-950/70 p-4 rounded-2xl border border-purple-500/50 flex flex-col sm:flex-row sm:items-center justify-between gap-3 text-xs text-purple-200 shadow-xl animate-in fade-in duration-200">
+            <div className="flex items-center gap-2.5">
+              <span className="w-2.5 h-2.5 rounded-full bg-emerald-400 animate-ping shrink-0" />
+              <div>
+                <span className="font-bold text-sm text-white block sm:inline ml-2">
+                  📽️ تم تفعيل وضع البروجكتور والشاشات الكبيرة (Ultra-Wide Presentation)
+                </span>
+                <span className="text-[11px] text-stone-300">
+                  خطوط مكبرة، ورسوم بيانية موسعة، وتباين بصري عالي الدقة لتسهيل القراءة الجماعية في غرف الاجتماعات وقاعات الإنتاج.
+                </span>
+              </div>
+            </div>
+            <button
+              type="button"
+              onClick={() => setDisplayMode('standard')}
+              className="px-3 py-1.5 bg-white/10 hover:bg-white/20 text-white rounded-lg text-xs font-bold transition-colors cursor-pointer shrink-0"
+            >
+              العودة للوضع العادي ✕
+            </button>
+          </div>
+        )}
+
         {/* 1. OVERVIEW TAB */}
         {activeTab === 'overview' && (
           <div className="space-y-6">
             {/* Visual Recharts Analytics Dashboard */}
-            <AnalyticsDashboard orders={orders} products={products} />
+            <AnalyticsDashboard orders={orders} products={products} displayMode={displayMode} />
 
             {/* Quick Action Banner */}
             <div className="bg-gradient-to-r from-amber-500/10 via-amber-50 to-orange-50 p-6 rounded-2xl border border-amber-200/80 flex flex-col md:flex-row md:items-center justify-between gap-4">
@@ -1319,6 +1441,7 @@ ${order.notes ? `\n📝 *ملاحظات:* ${order.notes}` : ''}
             campaigns={campaigns}
             onSaveCampaigns={handleSaveCampaigns}
             products={products}
+            displayMode={displayMode}
           />
         )}
 
